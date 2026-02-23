@@ -21,12 +21,14 @@ const encounterPanel = document.getElementById("encounter-panel");
 const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
+const diceRollElement = document.getElementById("dice-roll");
 const turnIndicatorElement = document.getElementById("turn-indicator");
 const battleLogElement = document.getElementById("battle-log");
 const inventoryListElement = document.getElementById("inventory-list");
 const attackButton = document.getElementById("attack-btn");
 const healButton = document.getElementById("heal-btn");
 const escapeButton = document.getElementById("escape-btn");
+const fullscreenButton = document.getElementById("fullscreen-btn");
 
 const TILE = 32;
 const MAX_PARTY_SIZE = 3;
@@ -686,6 +688,7 @@ function startEncounter(milestone) {
   const raceMeta = getRaceMeta(milestone.race || "humano");
   enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
+  diceRollElement.textContent = "d20: --";
   logCombatEvent(`Inicia combate contra ${milestone.enemy}.`);
   updateCombatStats();
 }
@@ -742,18 +745,36 @@ async function applyDamageToEnemy(damage, label) {
   const playerRace = getPlayerRaceKey();
   const enemyRace = state.activeEncounter.milestone.race || "humano";
   const raceMult = getRaceDamageMultiplier(playerRace, enemyRace);
-  const finalDamage = Math.max(1, Math.round(damage * raceMult));
+  let finalDamage = Math.max(1, Math.round(damage * raceMult));
+  let rollText = "d20: --";
+
+  if (label === "Ataque") {
+    const d20 = Math.floor(Math.random() * 20) + 1;
+    if (d20 === 20) {
+      finalDamage = Math.max(1, Math.round(finalDamage * 2));
+      rollText = `d20: 20 (CRITICO x2)`;
+    } else if (d20 === 1) {
+      finalDamage = Math.max(1, Math.floor(finalDamage * 0.5));
+      rollText = `d20: 1 (FALLO DURO x0.5)`;
+    } else {
+      rollText = `d20: ${d20}`;
+    }
+    diceRollElement.textContent = rollText;
+  } else {
+    diceRollElement.textContent = "d20: n/a";
+  }
+
   state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - finalDamage);
 
   if (state.activeEncounter.hp <= 0) {
     battleLogElement.textContent = `${label} hace ${finalDamage}. Enemigo derrotado.`;
-    logCombatEvent(`${label}: ${finalDamage} de dano final (${getRaceMeta(playerRace).label}).`);
+    logCombatEvent(`${label}: ${finalDamage} de dano final (${getRaceMeta(playerRace).label}) ${rollText}.`);
     endEncounterWithVictory();
     return;
   }
 
   battleLogElement.textContent = `${label} hace ${finalDamage}. El enemigo sigue en pie.`;
-  logCombatEvent(`${label}: ${finalDamage} de dano (${getRaceMeta(playerRace).label}).`);
+  logCombatEvent(`${label}: ${finalDamage} de dano (${getRaceMeta(playerRace).label}) ${rollText}.`);
   updateCombatStats();
   await enemyTurn();
 }
@@ -1026,6 +1047,24 @@ routeSelect.addEventListener("change", () => {
     return;
   }
   switchRoute(routeSelect.value);
+});
+
+fullscreenButton.addEventListener("click", async () => {
+  try {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      fullscreenButton.textContent = "Salir pantalla completa";
+    } else {
+      await document.exitFullscreen();
+      fullscreenButton.textContent = "Pantalla completa";
+    }
+  } catch {
+    messageElement.textContent = "Pantalla completa no disponible en este navegador.";
+  }
+});
+
+document.addEventListener("fullscreenchange", () => {
+  fullscreenButton.textContent = document.fullscreenElement ? "Salir pantalla completa" : "Pantalla completa";
 });
 
 setCombatTurn("player");

@@ -281,6 +281,12 @@ canvas {
   color: #ffd166;
 }
 
+.dice-roll {
+  margin: 0.3rem 0 0;
+  font-weight: 700;
+  color: #c4f1ff;
+}
+
 #battle-log {
   margin: 0.45rem 0 0;
   min-height: 1.3rem;
@@ -318,6 +324,15 @@ canvas {
 .controls div {
   display: flex;
   gap: 0.4rem;
+}
+
+.fullscreen-btn {
+  width: 100%;
+  min-width: 220px;
+  min-height: 40px;
+  font-size: 0.9rem;
+  background: rgba(34, 211, 238, 0.22);
+  border-color: rgba(34, 211, 238, 0.65);
 }
 
 button {

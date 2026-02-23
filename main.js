@@ -758,6 +758,8 @@ function startEncounter(milestone) {
   setCombatControlsEnabled(true);
   const raceMeta = getRaceMeta(milestone.race || "humano");
   const factionLabel = getFactionLabel(milestone.race || "humano");
+  encounterPanel.dataset.faction = raceMeta.faction || "cielo";
+  encounterPanel.dataset.race = milestone.race || "humano";
   enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style} | ${factionLabel})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
   updateStoryLine(`Combate activo: ${milestone.enemy} representa al ${factionLabel}.`);

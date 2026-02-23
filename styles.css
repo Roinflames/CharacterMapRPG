@@ -218,7 +218,7 @@ canvas {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(520px, calc(100vw - 3rem));
+  width: min(560px, calc(100vw - 3rem));
   z-index: 20;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
   border-radius: 4px;
@@ -238,17 +238,31 @@ canvas {
 
 .enemy-image {
   width: 100%;
-  max-height: 180px;
+  max-height: 236px;
   object-fit: cover;
+  object-position: center 46%;
   border-radius: 4px;
-  border: 2px solid rgba(132, 220, 255, 0.55);
+  border: 2px solid rgba(132, 220, 255, 0.72);
   margin-bottom: 0.55rem;
   background: rgba(255, 255, 255, 0.08);
-  image-rendering: pixelated;
+  image-rendering: auto;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 18px rgba(0, 0, 0, 0.35);
 }
 
 .enemy-frame {
   position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+}
+
+.enemy-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 34%, transparent 70%, rgba(0, 0, 0, 0.2) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.14), transparent 38%);
+  pointer-events: none;
 }
 
 .combat-scene-image {
@@ -432,6 +446,26 @@ button:disabled {
   background: color-mix(in srgb, var(--race-color) 70%, #0b1d26 30%);
   border: 1px solid color-mix(in srgb, var(--race-color) 88%, #ffffff 12%);
   vertical-align: middle;
+}
+
+.encounter-modal[data-faction="cielo"] {
+  border-color: rgba(116, 214, 255, 0.8);
+}
+
+.encounter-modal[data-faction="infierno"] {
+  border-color: rgba(255, 122, 122, 0.82);
+}
+
+.encounter-modal[data-faction="cielo"] .enemy-image {
+  filter: saturate(1.05) contrast(1.05);
+}
+
+.encounter-modal[data-faction="infierno"] .enemy-image {
+  filter: saturate(1.15) contrast(1.08);
+}
+
+.encounter-modal[data-race="umbrio"] .enemy-image {
+  filter: saturate(1.2) contrast(1.1) hue-rotate(10deg);
 }
 
 button:active {

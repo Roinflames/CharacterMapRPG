@@ -9,6 +9,7 @@ const characterBonusElement = document.getElementById("character-bonus");
 const partyListElement = document.getElementById("party-list");
 const recruitListElement = document.getElementById("recruit-list");
 const combatBackdrop = document.getElementById("combat-backdrop");
+const combatSceneImageElement = document.getElementById("combat-scene-image");
 const encounterPanel = document.getElementById("encounter-panel");
 const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
@@ -28,6 +29,18 @@ const ITEM_DEFS = {
 };
 
 const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
+const COMBAT_SCENE_ASSET = "assets/combat/arena.svg";
+const ENEMY_ASSETS = {
+  "Lobo Sombrio": "assets/enemies/lobo-sombrio.svg",
+  "Bandido del Valle": "assets/enemies/bandido-del-valle.svg",
+  "Guardian de Piedra": "assets/enemies/guardian-de-piedra.svg",
+  "Capitan del Portal": "assets/enemies/capitan-del-portal.svg",
+  "Bruja del Pantano": "assets/enemies/bruja-del-pantano.svg",
+  "Caballero Perdido": "assets/enemies/caballero-perdido.svg",
+  "Bestia de Ceniza": "assets/enemies/bestia-de-ceniza.svg",
+  "Arquero del Eclipse": "assets/enemies/arquero-del-eclipse.svg",
+  "Dragon Menor": "assets/enemies/dragon-menor.svg",
+};
 
 const COMPANIONS = [
   { id: "tank", name: "Bran Escudo", atk: 1, def: 1, hp: 4 },
@@ -107,38 +120,6 @@ const state = {
   nextItemId: 1,
   party: [],
 };
-
-function getEnemyPortraitDataUri(enemyName) {
-  const seed = enemyName.length % 3;
-  const palettes = [
-    { from: "#5f0f40", to: "#9a031e" },
-    { from: "#004e64", to: "#00a5cf" },
-    { from: "#2b2d42", to: "#8d99ae" },
-  ];
-  const palette = palettes[seed];
-  const initials = enemyName
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 3)
-    .toUpperCase();
-  const svg = `
-    <svg xmlns='http://www.w3.org/2000/svg' width='720' height='300'>
-      <defs>
-        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-          <stop offset='0%' stop-color='${palette.from}' />
-          <stop offset='100%' stop-color='${palette.to}' />
-        </linearGradient>
-      </defs>
-      <rect width='100%' height='100%' fill='url(#g)' />
-      <circle cx='130' cy='150' r='86' fill='rgba(255,255,255,0.18)' />
-      <text x='130' y='166' text-anchor='middle' fill='#fff' font-size='64' font-family='Trebuchet MS'>${initials}</text>
-      <text x='230' y='140' fill='rgba(255,255,255,0.95)' font-size='40' font-family='Trebuchet MS'>${enemyName}</text>
-      <text x='230' y='182' fill='rgba(255,255,255,0.72)' font-size='24' font-family='Trebuchet MS'>Objetivo del enfrentamiento</text>
-    </svg>
-  `;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-}
 
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
@@ -413,7 +394,8 @@ function startEncounter(milestone) {
     hp: milestone.hp,
   };
 
-  enemyImageElement.src = getEnemyPortraitDataUri(milestone.enemy);
+  combatSceneImageElement.src = COMBAT_SCENE_ASSET;
+  enemyImageElement.src = ENEMY_ASSETS[milestone.enemy] || COMBAT_SCENE_ASSET;
   enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
   setCombatModalOpen(true);
   enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;

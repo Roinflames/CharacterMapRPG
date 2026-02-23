@@ -196,6 +196,16 @@ canvas {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.combat-scene-image {
+  width: 100%;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  margin-bottom: 0.55rem;
+  opacity: 0.95;
+}
+
 #combat-stats {
   margin: 0.45rem 0 0;
   font-weight: 700;

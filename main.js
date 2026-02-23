@@ -286,21 +286,36 @@ function fillRoundRect(ctx2d, x, y, width, height, radius) {
   ctx2d.fill();
 }
 
+function getEnemyArchetype(enemyName) {
+  const key = (enemyName || "").toLowerCase();
+  if (key.includes("lobo")) return "wolf";
+  if (key.includes("bandido")) return "bandit";
+  if (key.includes("guardian")) return "guardian";
+  if (key.includes("capitan")) return "captain";
+  if (key.includes("bruja")) return "witch";
+  if (key.includes("caballero")) return "knight";
+  if (key.includes("bestia")) return "beast";
+  if (key.includes("arquero")) return "archer";
+  if (key.includes("dragon")) return "dragon";
+  return "default";
+}
+
 function drawEnemyPortrait(milestone) {
   const raceKey = milestone.race || "humano";
   const race = getRaceMeta(raceKey);
   const style = race.style || "fisico";
-  const cacheKey = `${milestone.enemy}|${raceKey}|${style}`;
+  const archetype = getEnemyArchetype(milestone.enemy);
+  const cacheKey = `${milestone.enemy}|${raceKey}|${style}|${archetype}|v2`;
   if (ENEMY_PORTRAIT_CACHE.has(cacheKey)) return ENEMY_PORTRAIT_CACHE.get(cacheKey);
 
   const paletteByRace = {
-    humano: { base: "#8a2e3a", shade: "#4f1a22", skin: "#e88a95", accent: "#f4bf56" },
-    elfo: { base: "#1e5f4b", shade: "#123a2e", skin: "#8ad9ba", accent: "#6ef7ce" },
-    enano: { base: "#7b4730", shade: "#4e2d1f", skin: "#cf9d70", accent: "#f2c078" },
-    orco: { base: "#355a1d", shade: "#223813", skin: "#8fbe4b", accent: "#d6f26d" },
-    draconico: { base: "#7f2f12", shade: "#4a1b0a", skin: "#d98a5b", accent: "#ff9f4a" },
-    umbrio: { base: "#4a286a", shade: "#281439", skin: "#a88bdc", accent: "#d3a6ff" },
-    celestial: { base: "#1d4f78", shade: "#103049", skin: "#87c6e8", accent: "#9cecff" },
+    humano: { base: "#633244", shade: "#1f1a2b", skin: "#ce8e87", accent: "#f3c067" },
+    elfo: { base: "#2d5a4f", shade: "#152a28", skin: "#a0d4be", accent: "#7cebc2" },
+    enano: { base: "#6a4632", shade: "#231914", skin: "#b9855f", accent: "#f0bc7a" },
+    orco: { base: "#485c2f", shade: "#1c2718", skin: "#83a55e", accent: "#c4f277" },
+    draconico: { base: "#7b3724", shade: "#28150e", skin: "#b4775d", accent: "#ffa15f" },
+    umbrio: { base: "#4c3d6a", shade: "#1b1730", skin: "#9884ba", accent: "#d2adff" },
+    celestial: { base: "#315a7a", shade: "#152238", skin: "#9bc7db", accent: "#a3e9ff" },
   };
 
   const palette = paletteByRace[raceKey] || paletteByRace.humano;
@@ -315,109 +330,202 @@ function drawEnemyPortrait(milestone) {
 
   const bg = ctx2d.createLinearGradient(0, 0, 640, 360);
   bg.addColorStop(0, palette.shade);
-  bg.addColorStop(1, palette.base);
+  bg.addColorStop(0.55, palette.base);
+  bg.addColorStop(1, "#0f121b");
   ctx2d.fillStyle = bg;
   ctx2d.fillRect(0, 0, 640, 360);
 
-  for (let i = 0; i < 8; i += 1) {
+  for (let i = 0; i < 7; i += 1) {
     const x = rand() * 640;
     const y = rand() * 360;
-    const radius = 40 + rand() * 140;
+    const radius = 56 + rand() * 180;
     const glow = ctx2d.createRadialGradient(x, y, 6, x, y, radius);
-    glow.addColorStop(0, `${palette.accent}55`);
+    glow.addColorStop(0, `${palette.accent}44`);
     glow.addColorStop(1, `${palette.accent}00`);
     ctx2d.fillStyle = glow;
     ctx2d.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
 
-  ctx2d.fillStyle = "rgba(0,0,0,0.28)";
+  ctx2d.fillStyle = "rgba(0,0,0,0.34)";
   ctx2d.beginPath();
-  ctx2d.ellipse(320, 300, 180, 36, 0, 0, Math.PI * 2);
+  ctx2d.ellipse(320, 308, 196, 42, 0, 0, Math.PI * 2);
   ctx2d.fill();
 
-  ctx2d.fillStyle = palette.skin;
+  const torso = ctx2d.createLinearGradient(320, 166, 320, 334);
+  torso.addColorStop(0, `${palette.base}`);
+  torso.addColorStop(1, `${palette.shade}`);
+  ctx2d.fillStyle = torso;
   ctx2d.beginPath();
-  ctx2d.ellipse(320, 208, 112, 94, 0, 0, Math.PI * 2);
+  ctx2d.moveTo(206, 330);
+  ctx2d.quadraticCurveTo(250, 240, 320, 228);
+  ctx2d.quadraticCurveTo(390, 240, 434, 330);
+  ctx2d.closePath();
   ctx2d.fill();
 
-  ctx2d.fillStyle = palette.base;
-  fillRoundRect(ctx2d, 236, 98, 168, 28, 10);
+  const skinGrad = ctx2d.createLinearGradient(320, 94, 320, 254);
+  skinGrad.addColorStop(0, "#f1d8c6");
+  skinGrad.addColorStop(0.5, palette.skin);
+  skinGrad.addColorStop(1, `${palette.shade}`);
+  ctx2d.fillStyle = skinGrad;
+  ctx2d.beginPath();
+  ctx2d.moveTo(320, 98);
+  ctx2d.bezierCurveTo(262, 104, 224, 152, 228, 210);
+  ctx2d.bezierCurveTo(232, 246, 256, 280, 320, 286);
+  ctx2d.bezierCurveTo(384, 280, 408, 246, 412, 210);
+  ctx2d.bezierCurveTo(416, 152, 378, 104, 320, 98);
+  ctx2d.closePath();
+  ctx2d.fill();
 
-  if (style === "fisico") {
-    ctx2d.fillStyle = "rgba(20, 24, 30, 0.82)";
-    fillRoundRect(ctx2d, 246, 124, 148, 38, 12);
-  } else {
-    ctx2d.strokeStyle = `${palette.accent}cc`;
-    ctx2d.lineWidth = 4;
-    ctx2d.beginPath();
-    ctx2d.arc(320, 142, 64, 0, Math.PI * 2);
-    ctx2d.stroke();
+  ctx2d.fillStyle = "rgba(0,0,0,0.16)";
+  ctx2d.beginPath();
+  ctx2d.moveTo(260, 238);
+  ctx2d.quadraticCurveTo(320, 260, 380, 238);
+  ctx2d.quadraticCurveTo(348, 292, 320, 296);
+  ctx2d.quadraticCurveTo(292, 292, 260, 238);
+  ctx2d.fill();
+
+  const browY = 170 + Math.round(rand() * 10);
+  const eyeSpan = 62 + Math.round(rand() * 8);
+  const eyeHeight = style === "magico" ? 12 : 15;
+  const eyeWidth = style === "magico" ? 44 : 42;
+
+  ctx2d.fillStyle = "rgba(10, 12, 18, 0.9)";
+  fillRoundRect(ctx2d, 320 - eyeSpan - eyeWidth / 2, browY, eyeWidth, eyeHeight, 5);
+  fillRoundRect(ctx2d, 320 + eyeSpan - eyeWidth / 2, browY, eyeWidth, eyeHeight, 5);
+
+  const eyeGlow = ctx2d.createRadialGradient(320 - eyeSpan, browY + eyeHeight / 2, 2, 320 - eyeSpan, browY + eyeHeight / 2, 16);
+  eyeGlow.addColorStop(0, `${palette.accent}`);
+  eyeGlow.addColorStop(1, `${palette.accent}00`);
+  ctx2d.fillStyle = eyeGlow;
+  ctx2d.beginPath();
+  ctx2d.arc(320 - eyeSpan, browY + eyeHeight / 2, 16, 0, Math.PI * 2);
+  ctx2d.fill();
+  const eyeGlowB = ctx2d.createRadialGradient(320 + eyeSpan, browY + eyeHeight / 2, 2, 320 + eyeSpan, browY + eyeHeight / 2, 16);
+  eyeGlowB.addColorStop(0, `${palette.accent}`);
+  eyeGlowB.addColorStop(1, `${palette.accent}00`);
+  ctx2d.fillStyle = eyeGlowB;
+  ctx2d.beginPath();
+  ctx2d.arc(320 + eyeSpan, browY + eyeHeight / 2, 16, 0, Math.PI * 2);
+  ctx2d.fill();
+
+  ctx2d.fillStyle = "#e8eef8";
+  ctx2d.beginPath();
+  ctx2d.arc(320 - eyeSpan, browY + eyeHeight / 2, 3.4, 0, Math.PI * 2);
+  ctx2d.arc(320 + eyeSpan, browY + eyeHeight / 2, 3.4, 0, Math.PI * 2);
+  ctx2d.fill();
+
+  if (archetype === "bandit" || archetype === "captain") {
+    ctx2d.fillStyle = "rgba(12, 14, 20, 0.84)";
+    fillRoundRect(ctx2d, 232, browY - 6, 176, eyeHeight + 16, 8);
+    ctx2d.strokeStyle = `${palette.accent}aa`;
+    ctx2d.lineWidth = 2;
+    ctx2d.strokeRect(236, browY - 2, 168, eyeHeight + 8);
   }
 
-  if ((milestone.enemy || "").toLowerCase().includes("lobo") || raceKey === "umbrio") {
-    ctx2d.fillStyle = palette.skin;
-    ctx2d.beginPath();
-    ctx2d.moveTo(248, 128);
-    ctx2d.lineTo(286, 78);
-    ctx2d.lineTo(298, 138);
-    ctx2d.closePath();
-    ctx2d.fill();
-    ctx2d.beginPath();
-    ctx2d.moveTo(392, 128);
-    ctx2d.lineTo(354, 78);
-    ctx2d.lineTo(342, 138);
-    ctx2d.closePath();
-    ctx2d.fill();
+  if (archetype === "knight" || archetype === "guardian") {
+    ctx2d.fillStyle = "rgba(40, 44, 58, 0.82)";
+    fillRoundRect(ctx2d, 248, 114, 144, 26, 8);
+    ctx2d.fillStyle = "rgba(222, 229, 240, 0.14)";
+    fillRoundRect(ctx2d, 258, 118, 124, 8, 4);
   }
 
-  ctx2d.fillStyle = "#ffffff";
-  ctx2d.beginPath();
-  ctx2d.ellipse(286, 198, 14, 12, 0, 0, Math.PI * 2);
-  ctx2d.ellipse(354, 198, 14, 12, 0, 0, Math.PI * 2);
-  ctx2d.fill();
-  ctx2d.fillStyle = "#0e1116";
-  ctx2d.beginPath();
-  ctx2d.ellipse(286, 198, 6, 6, 0, 0, Math.PI * 2);
-  ctx2d.ellipse(354, 198, 6, 6, 0, 0, Math.PI * 2);
-  ctx2d.fill();
-
-  ctx2d.fillStyle = style === "fisico" ? "#f4e6c5" : "#d8f0ff";
-  fillRoundRect(ctx2d, 272, 232, 96, 54, 14);
-
-  if (style === "magico") {
+  if (archetype === "witch" || style === "magico") {
     ctx2d.strokeStyle = `${palette.accent}cc`;
-    ctx2d.lineWidth = 3;
+    ctx2d.lineWidth = 2.5;
     for (let i = 0; i < 3; i += 1) {
-      const radius = 24 + i * 10;
       ctx2d.beginPath();
-      ctx2d.arc(320, 214, radius, 0.2, Math.PI - 0.2);
+      ctx2d.arc(320, 176, 94 + i * 16, 0.25, Math.PI - 0.25);
       ctx2d.stroke();
     }
-  } else {
-    ctx2d.fillStyle = `${palette.shade}cc`;
+  }
+
+  if (archetype === "wolf" || archetype === "beast") {
+    ctx2d.fillStyle = palette.skin;
     ctx2d.beginPath();
-    ctx2d.moveTo(250, 266);
-    ctx2d.lineTo(212, 304);
-    ctx2d.lineTo(276, 304);
+    ctx2d.moveTo(248, 134);
+    ctx2d.lineTo(288, 70);
+    ctx2d.lineTo(302, 142);
     ctx2d.closePath();
     ctx2d.fill();
     ctx2d.beginPath();
-    ctx2d.moveTo(390, 266);
-    ctx2d.lineTo(364, 304);
-    ctx2d.lineTo(428, 304);
+    ctx2d.moveTo(392, 134);
+    ctx2d.lineTo(352, 70);
+    ctx2d.lineTo(338, 142);
     ctx2d.closePath();
     ctx2d.fill();
   }
 
-  ctx2d.strokeStyle = "rgba(255,255,255,0.18)";
-  ctx2d.lineWidth = 2;
-  for (let i = 0; i < 4; i += 1) {
-    const y = 42 + i * 72 + rand() * 18;
+  if (archetype === "dragon") {
+    ctx2d.fillStyle = `${palette.accent}aa`;
     ctx2d.beginPath();
-    ctx2d.moveTo(0, y);
-    ctx2d.bezierCurveTo(180, y - 20, 460, y + 20, 640, y - 4);
+    ctx2d.moveTo(268, 112);
+    ctx2d.lineTo(242, 84);
+    ctx2d.lineTo(274, 94);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.moveTo(372, 112);
+    ctx2d.lineTo(398, 84);
+    ctx2d.lineTo(366, 94);
+    ctx2d.closePath();
+    ctx2d.fill();
+  }
+
+  if (archetype === "archer") {
+    ctx2d.strokeStyle = `${palette.accent}bb`;
+    ctx2d.lineWidth = 3;
+    ctx2d.beginPath();
+    ctx2d.arc(404, 194, 36, -1.3, 1.3);
+    ctx2d.stroke();
+    ctx2d.beginPath();
+    ctx2d.moveTo(404, 158);
+    ctx2d.lineTo(404, 230);
     ctx2d.stroke();
   }
+
+  ctx2d.fillStyle = style === "fisico" ? "#2d1f1a" : "#1c2637";
+  fillRoundRect(ctx2d, 272, 236, 96, 48, 12);
+  ctx2d.fillStyle = style === "fisico" ? "#e8d8bc" : "#cbe9ff";
+  fillRoundRect(ctx2d, 278, 242, 84, 36, 10);
+
+  if (style === "fisico") {
+    ctx2d.fillStyle = `${palette.shade}cc`;
+    ctx2d.beginPath();
+    ctx2d.moveTo(254, 272);
+    ctx2d.lineTo(214, 316);
+    ctx2d.lineTo(278, 318);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.moveTo(386, 272);
+    ctx2d.lineTo(362, 316);
+    ctx2d.lineTo(428, 316);
+    ctx2d.closePath();
+    ctx2d.fill();
+  } else {
+    ctx2d.strokeStyle = `${palette.accent}88`;
+    ctx2d.lineWidth = 2;
+    ctx2d.beginPath();
+    ctx2d.moveTo(236, 302);
+    ctx2d.quadraticCurveTo(320, 284, 404, 302);
+    ctx2d.stroke();
+  }
+
+  ctx2d.strokeStyle = "rgba(255,255,255,0.11)";
+  ctx2d.lineWidth = 1.8;
+  for (let i = 0; i < 5; i += 1) {
+    const y = 26 + i * 68 + rand() * 16;
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, y);
+    ctx2d.bezierCurveTo(160, y - 16, 468, y + 18, 640, y - 8);
+    ctx2d.stroke();
+  }
+
+  const vignette = ctx2d.createRadialGradient(320, 180, 120, 320, 180, 360);
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, "rgba(0,0,0,0.36)");
+  ctx2d.fillStyle = vignette;
+  ctx2d.fillRect(0, 0, 640, 360);
 
   const data = canvasEl.toDataURL("image/webp", 0.92);
   ENEMY_PORTRAIT_CACHE.set(cacheKey, data);

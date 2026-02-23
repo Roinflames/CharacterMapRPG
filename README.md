@@ -1,4 +1,4 @@
-# Character Map (UI v0.25.0)
+# Character Map (UI v0.26.0)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,7 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.26.0`: retratos enemigos rediseñados con estilo mas serio (arquetipos por enemigo, mejor anatomia facial y sombreado cinematografico).
 - `v0.25.0`: animacion de respiracion para retratos enemigos en combate, manteniendo el enfoque visual sin cambios de mecanica.
 - `v0.24.0`: pipeline de retratos enemigos generado por codigo (variacion por raza/estilo y por enemigo), eliminando recortes defectuosos y manteniendo animaciones de combate.
 - `v0.23.0`: rediseño visual del modal de combate (mayor escala, mejor jerarquía tipográfica, barras/acciones más claras y entrada animada).

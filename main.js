@@ -305,7 +305,7 @@ function drawEnemyPortrait(milestone) {
   const race = getRaceMeta(raceKey);
   const style = race.style || "fisico";
   const archetype = getEnemyArchetype(milestone.enemy);
-  const cacheKey = `${milestone.enemy}|${raceKey}|${style}|${archetype}|v2`;
+  const cacheKey = `${milestone.enemy}|${raceKey}|${style}|${archetype}|v4`;
   if (ENEMY_PORTRAIT_CACHE.has(cacheKey)) return ENEMY_PORTRAIT_CACHE.get(cacheKey);
 
   const paletteByRace = {
@@ -384,10 +384,10 @@ function drawEnemyPortrait(milestone) {
   ctx2d.quadraticCurveTo(292, 292, 260, 238);
   ctx2d.fill();
 
-  const browY = 170 + Math.round(rand() * 10);
-  const eyeSpan = 62 + Math.round(rand() * 8);
-  const eyeHeight = style === "magico" ? 12 : 15;
-  const eyeWidth = style === "magico" ? 44 : 42;
+  const browY = 164 + Math.round(rand() * 8);
+  const eyeSpan = 54 + Math.round(rand() * 7);
+  const eyeHeight = style === "magico" ? 11 : 13;
+  const eyeWidth = style === "magico" ? 40 : 38;
 
   ctx2d.fillStyle = "rgba(10, 12, 18, 0.9)";
   fillRoundRect(ctx2d, 320 - eyeSpan - eyeWidth / 2, browY, eyeWidth, eyeHeight, 5);
@@ -408,18 +408,21 @@ function drawEnemyPortrait(milestone) {
   ctx2d.arc(320 + eyeSpan, browY + eyeHeight / 2, 16, 0, Math.PI * 2);
   ctx2d.fill();
 
-  ctx2d.fillStyle = "#e8eef8";
+  ctx2d.fillStyle = "#f3f7ff";
   ctx2d.beginPath();
-  ctx2d.arc(320 - eyeSpan, browY + eyeHeight / 2, 3.4, 0, Math.PI * 2);
-  ctx2d.arc(320 + eyeSpan, browY + eyeHeight / 2, 3.4, 0, Math.PI * 2);
+  ctx2d.arc(320 - eyeSpan, browY + eyeHeight / 2, 4.2, 0, Math.PI * 2);
+  ctx2d.arc(320 + eyeSpan, browY + eyeHeight / 2, 4.2, 0, Math.PI * 2);
   ctx2d.fill();
 
   if (archetype === "bandit" || archetype === "captain") {
     ctx2d.fillStyle = "rgba(12, 14, 20, 0.84)";
-    fillRoundRect(ctx2d, 232, browY - 6, 176, eyeHeight + 16, 8);
+    fillRoundRect(ctx2d, 236, browY - 24, 168, 16, 6);
+    ctx2d.fillStyle = "rgba(12, 14, 20, 0.6)";
+    fillRoundRect(ctx2d, 238, browY + 16, 28, 34, 8);
+    fillRoundRect(ctx2d, 374, browY + 16, 28, 34, 8);
     ctx2d.strokeStyle = `${palette.accent}aa`;
     ctx2d.lineWidth = 2;
-    ctx2d.strokeRect(236, browY - 2, 168, eyeHeight + 8);
+    ctx2d.strokeRect(240, browY - 20, 160, 8);
   }
 
   if (archetype === "knight" || archetype === "guardian") {
@@ -483,10 +486,27 @@ function drawEnemyPortrait(milestone) {
     ctx2d.stroke();
   }
 
+  const jawY = archetype === "wolf" || archetype === "beast" ? 232 : 238;
+  const jawW = archetype === "knight" || archetype === "guardian" ? 90 : 84;
   ctx2d.fillStyle = style === "fisico" ? "#2d1f1a" : "#1c2637";
-  fillRoundRect(ctx2d, 272, 236, 96, 48, 12);
+  fillRoundRect(ctx2d, 320 - (jawW + 8) / 2, jawY - 6, jawW + 8, 50, 12);
   ctx2d.fillStyle = style === "fisico" ? "#e8d8bc" : "#cbe9ff";
-  fillRoundRect(ctx2d, 278, 242, 84, 36, 10);
+  fillRoundRect(ctx2d, 320 - jawW / 2, jawY, jawW, 36, 10);
+
+  ctx2d.strokeStyle = "rgba(0,0,0,0.34)";
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  ctx2d.moveTo(320, 194);
+  ctx2d.lineTo(312, 218);
+  ctx2d.lineTo(326, 218);
+  ctx2d.stroke();
+
+  ctx2d.strokeStyle = "rgba(35, 24, 22, 0.55)";
+  ctx2d.lineWidth = 2;
+  ctx2d.beginPath();
+  ctx2d.moveTo(286, 228);
+  ctx2d.quadraticCurveTo(320, 244, 354, 228);
+  ctx2d.stroke();
 
   if (style === "fisico") {
     ctx2d.fillStyle = `${palette.shade}cc`;

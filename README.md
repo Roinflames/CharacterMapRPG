@@ -1,4 +1,4 @@
-# Character Map (UI v0.17.0)
+# Character Map (UI v0.19.0)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,7 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.19.0`: modal de combate con parallax real (fondo en capas + drift ambiental + profundidad en retrato enemigo al mover puntero).
 - `v0.17.0`: mejora visual fuerte de enemigos (webp refinado + presentacion de retratos por faccion/raza en combate).
 - `v0.16.0`: sistema de equipamiento (arma + armadura) con impacto en ATQ/DEF/HP y bloqueo de cambios durante combate.
 - `v0.15.2`: protagonista principal con alias japones en UI (`Jisuo Tenma`) y rol narrativo de portador de la luz.

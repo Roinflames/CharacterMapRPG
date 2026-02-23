@@ -236,6 +236,28 @@ canvas {
   z-index: 10;
 }
 
+.scene-parallax {
+  position: relative;
+  height: 130px;
+  margin-bottom: 0.55rem;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 2px solid rgba(132, 220, 255, 0.42);
+  background: linear-gradient(180deg, rgba(9, 34, 52, 0.9), rgba(11, 30, 44, 0.85));
+}
+
+.scene-parallax::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.18), transparent 22%),
+    radial-gradient(circle at 80% 12%, rgba(255, 255, 255, 0.14), transparent 25%),
+    linear-gradient(180deg, transparent 55%, rgba(9, 24, 36, 0.38) 100%);
+  pointer-events: none;
+  z-index: 5;
+}
+
 .enemy-image {
   width: 100%;
   max-height: 236px;
@@ -247,6 +269,9 @@ canvas {
   background: rgba(255, 255, 255, 0.08);
   image-rendering: auto;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: transform 180ms ease-out;
+  position: relative;
+  z-index: 4;
 }
 
 .enemy-frame {
@@ -266,14 +291,28 @@ canvas {
 }
 
 .combat-scene-image {
-  width: 100%;
-  max-height: 130px;
+  position: absolute;
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
   object-fit: cover;
-  border-radius: 4px;
-  border: 2px solid rgba(132, 220, 255, 0.42);
-  margin-bottom: 0.55rem;
-  opacity: 0.94;
-  image-rendering: pixelated;
+  margin: 0;
+  image-rendering: auto;
+  transition: transform 180ms ease-out;
+}
+
+.scene-back {
+  z-index: 1;
+  opacity: 0.82;
+  filter: saturate(0.86) brightness(0.88);
+}
+
+.scene-front {
+  z-index: 2;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  filter: saturate(1.15) brightness(1.04);
+  animation: sceneDrift 8.5s ease-in-out infinite alternate;
 }
 
 #combat-stats {
@@ -554,6 +593,18 @@ button:active {
   15% { opacity: 1; transform: translateY(0) scale(1); }
   70% { opacity: 1; transform: translateY(-14px) scale(1); }
   100% { opacity: 0; transform: translateY(-24px) scale(0.95); }
+}
+
+@keyframes sceneDrift {
+  0% { transform: translate(0, 0) scale(1.06); }
+  50% { transform: translate(-6px, 2px) scale(1.07); }
+  100% { transform: translate(6px, -3px) scale(1.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-front {
+    animation: none;
+  }
 }
 
 @media (min-width: 1100px) {

@@ -20,7 +20,9 @@ const summonEssenceElement = document.getElementById("summon-essence");
 const summonListElement = document.getElementById("summon-list");
 const combatHistoryElement = document.getElementById("combat-history");
 const combatBackdrop = document.getElementById("combat-backdrop");
-const combatSceneImageElement = document.getElementById("combat-scene-image");
+const sceneParallaxElement = document.getElementById("scene-parallax");
+const combatSceneBackElement = document.getElementById("combat-scene-back");
+const combatSceneFrontElement = document.getElementById("combat-scene-front");
 const encounterPanel = document.getElementById("encounter-panel");
 const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
@@ -191,6 +193,34 @@ const state = {
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
+  if (!isOpen) resetSceneParallax();
+}
+
+function resetSceneParallax() {
+  if (combatSceneBackElement) combatSceneBackElement.style.transform = "";
+  if (combatSceneFrontElement) combatSceneFrontElement.style.transform = "";
+  if (enemyImageElement) enemyImageElement.style.transform = "";
+}
+
+function updateSceneParallaxFromPointer(event) {
+  if (!sceneParallaxElement || !combatSceneBackElement || !combatSceneFrontElement || !enemyImageElement) return;
+  if (encounterPanel.classList.contains("hidden")) return;
+  const rect = sceneParallaxElement.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+
+  const px = (event.clientX - rect.left) / rect.width - 0.5;
+  const py = (event.clientY - rect.top) / rect.height - 0.5;
+
+  const backX = Math.round(px * 8);
+  const backY = Math.round(py * 6);
+  const frontX = Math.round(px * 16);
+  const frontY = Math.round(py * 10);
+  const enemyX = Math.round(px * 12);
+  const enemyY = Math.round(py * 8);
+
+  combatSceneBackElement.style.transform = `translate(${backX}px, ${backY}px) scale(1.03)`;
+  combatSceneFrontElement.style.transform = `translate(${frontX}px, ${frontY}px) scale(1.08)`;
+  enemyImageElement.style.transform = `translate(${enemyX}px, ${enemyY}px) scale(1.02)`;
 }
 
 function getRaceMeta(raceKey) {
@@ -713,7 +743,7 @@ async function enemyTurn() {
   if (!state.activeEncounter) return;
 
   setCombatTurn("enemy");
-  await playTemporaryClass(combatSceneImageElement, "enemy-turn-anim", 280);
+  await playTemporaryClass(combatSceneFrontElement || encounterPanel, "enemy-turn-anim", 280);
 
   const enemyRace = state.activeEncounter.milestone.race || "humano";
   const playerRace = getPlayerRaceKey();
@@ -745,7 +775,9 @@ function startEncounter(milestone) {
   };
   state.combatLocked = false;
 
-  combatSceneImageElement.src = COMBAT_SCENE_ASSET;
+  if (combatSceneBackElement) combatSceneBackElement.src = COMBAT_SCENE_ASSET;
+  if (combatSceneFrontElement) combatSceneFrontElement.src = COMBAT_SCENE_ASSET;
+  resetSceneParallax();
   const enemyAsset = getEnemyAssetWithFallback(milestone.enemy);
   enemyImageElement.onerror = () => {
     enemyImageElement.onerror = null;
@@ -1183,6 +1215,14 @@ fullscreenButton.addEventListener("click", async () => {
 
 document.addEventListener("fullscreenchange", () => {
   fullscreenButton.textContent = document.fullscreenElement ? "Salir pantalla completa" : "Pantalla completa";
+});
+
+encounterPanel.addEventListener("pointermove", (event) => {
+  updateSceneParallaxFromPointer(event);
+});
+
+encounterPanel.addEventListener("pointerleave", () => {
+  resetSceneParallax();
 });
 
 setCombatTurn("player");

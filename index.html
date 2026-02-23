@@ -20,7 +20,7 @@
         </div>
         <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
-        <p class="version">UI v0.17.0</p>
+        <p class="version">UI v0.19.0</p>
       </section>
 
       <section class="inventory" aria-label="Historia principal">
@@ -103,7 +103,10 @@
 
       <div id="combat-backdrop" class="combat-backdrop hidden"></div>
       <section id="encounter-panel" class="encounter encounter-modal hidden" aria-live="polite">
-        <img id="combat-scene-image" class="combat-scene-image" src="assets/combat/arena.svg" alt="Escenario de combate" />
+        <div id="scene-parallax" class="scene-parallax">
+          <img id="combat-scene-back" class="combat-scene-image scene-back" src="assets/combat/arena.svg" alt="Escenario de combate" />
+          <img id="combat-scene-front" class="combat-scene-image scene-front" src="assets/combat/arena.svg" alt="" />
+        </div>
         <div class="enemy-frame">
           <img id="enemy-image" class="enemy-image" alt="Retrato del enemigo" />
           <span id="enemy-float-text" class="float-text hidden"></span>

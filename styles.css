@@ -212,6 +212,12 @@ canvas {
   font-weight: 700;
 }
 
+.turn-indicator {
+  margin: 0.35rem 0 0;
+  font-weight: 700;
+  color: #ffd166;
+}
+
 #battle-log {
   margin: 0.45rem 0 0;
   min-height: 1.3rem;
@@ -277,8 +283,57 @@ button {
   border-color: rgba(42, 157, 143, 0.65);
 }
 
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 button:active {
   transform: scale(0.98);
+}
+
+.player-attack-anim {
+  animation: playerAttackPulse 260ms ease;
+}
+
+.enemy-turn-anim {
+  animation: enemyTurnPulse 280ms ease;
+}
+
+.enemy-hit-anim {
+  animation: enemyHitShake 300ms ease;
+}
+
+.player-hit-anim {
+  animation: playerHitShake 300ms ease;
+}
+
+@keyframes playerAttackPulse {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  45% { transform: translate(-50%, -50%) scale(1.02); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes enemyTurnPulse {
+  0% { filter: brightness(1); }
+  50% { filter: brightness(1.15); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes enemyHitShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes playerHitShake {
+  0% { transform: translate(-50%, -50%); }
+  25% { transform: translate(calc(-50% - 6px), -50%); }
+  50% { transform: translate(calc(-50% + 6px), -50%); }
+  75% { transform: translate(calc(-50% - 3px), -50%); }
+  100% { transform: translate(-50%, -50%); }
 }
 
 @media (min-width: 1100px) {

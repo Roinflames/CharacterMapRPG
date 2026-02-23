@@ -14,6 +14,7 @@ const encounterPanel = document.getElementById("encounter-panel");
 const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
+const turnIndicatorElement = document.getElementById("turn-indicator");
 const battleLogElement = document.getElementById("battle-log");
 const inventoryListElement = document.getElementById("inventory-list");
 const attackButton = document.getElementById("attack-btn");
@@ -120,11 +121,51 @@ const state = {
   inventory: [],
   nextItemId: 1,
   party: [],
+  combatTurn: "player",
+  combatLocked: false,
 };
 
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
+}
+
+function setCombatControlsEnabled(enabled) {
+  attackButton.disabled = !enabled;
+  healButton.disabled = !enabled;
+}
+
+function setCombatTurn(turn) {
+  state.combatTurn = turn;
+  turnIndicatorElement.textContent = turn === "player" ? "Turno: Jugador" : "Turno: Enemigo";
+}
+
+function wait(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function playTemporaryClass(element, className, ms) {
+  element.classList.add(className);
+  await wait(ms);
+  element.classList.remove(className);
+}
+
+async function runPlayerAction(action) {
+  if (!state.activeEncounter) return;
+  if (state.combatTurn !== "player" || state.combatLocked) return;
+
+  state.combatLocked = true;
+  setCombatControlsEnabled(false);
+  try {
+    await action();
+  } finally {
+    state.combatLocked = false;
+    if (state.activeEncounter && state.combatTurn === "player") {
+      setCombatControlsEnabled(true);
+    }
+  }
 }
 
 function getNextRouteId(routeId) {
@@ -324,6 +365,9 @@ function resetRun(customMessage) {
     milestone.completed = false;
   });
 
+  state.combatLocked = false;
+  setCombatTurn("player");
+  setCombatControlsEnabled(true);
   setCombatModalOpen(false);
   messageElement.textContent = customMessage || `Reinicio en ${route.label}.`;
   updateStatsPanel();
@@ -369,6 +413,9 @@ function endEncounterWithVictory() {
   const earnedExp = milestone.hp + 6;
   milestone.completed = true;
   state.activeEncounter = null;
+  state.combatLocked = false;
+  setCombatTurn("player");
+  setCombatControlsEnabled(true);
   setCombatModalOpen(false);
 
   const lootName = rollLoot();
@@ -377,11 +424,15 @@ function endEncounterWithVictory() {
   updateStatus();
 }
 
-function enemyTurn() {
+async function enemyTurn() {
   if (!state.activeEncounter) return;
+
+  setCombatTurn("enemy");
+  await playTemporaryClass(combatSceneImageElement, "enemy-turn-anim", 280);
 
   const rawDamage = Math.floor(Math.random() * 4) + 2;
   const reducedDamage = Math.max(1, rawDamage - getPlayerDef());
+  await playTemporaryClass(encounterPanel, "player-hit-anim", 300);
   player.hp = Math.max(0, player.hp - reducedDamage);
 
   if (player.hp <= 0) {
@@ -394,6 +445,7 @@ function enemyTurn() {
   updateCombatStats();
   updateStatsPanel();
   updateStatus();
+  setCombatTurn("player");
 }
 
 function startEncounter(milestone) {
@@ -401,11 +453,14 @@ function startEncounter(milestone) {
     milestone,
     hp: milestone.hp,
   };
+  state.combatLocked = false;
 
   combatSceneImageElement.src = COMBAT_SCENE_ASSET;
   enemyImageElement.src = ENEMY_ASSETS[milestone.enemy] || COMBAT_SCENE_ASSET;
   enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
   setCombatModalOpen(true);
+  setCombatTurn("player");
+  setCombatControlsEnabled(true);
   enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
   updateCombatStats();
@@ -454,9 +509,11 @@ function move(dx, dy) {
   tryFinishMap();
 }
 
-function applyDamageToEnemy(damage, label) {
+async function applyDamageToEnemy(damage, label) {
   if (!state.activeEncounter) return;
 
+  await playTemporaryClass(encounterPanel, "player-attack-anim", 260);
+  await playTemporaryClass(enemyImageElement, "enemy-hit-anim", 300);
   state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - damage);
 
   if (state.activeEncounter.hp <= 0) {
@@ -467,10 +524,10 @@ function applyDamageToEnemy(damage, label) {
 
   battleLogElement.textContent = `${label} hace ${damage}. El enemigo sigue en pie.`;
   updateCombatStats();
-  enemyTurn();
+  await enemyTurn();
 }
 
-function useItemById(itemId) {
+async function useItemById(itemId) {
   const item = state.inventory.find((entry) => entry.id === itemId);
   if (!item) return;
 
@@ -482,7 +539,7 @@ function useItemById(itemId) {
     if (state.activeEncounter) {
       battleLogElement.textContent = `Usaste Pocion y recuperaste ${heal} HP.`;
       updateCombatStats();
-      enemyTurn();
+      await enemyTurn();
     }
     updateStatsPanel();
     updateStatus();
@@ -497,7 +554,7 @@ function useItemById(itemId) {
     if (state.activeEncounter) {
       battleLogElement.textContent = "Elixir activado. El enemigo toma su turno.";
       updateCombatStats();
-      enemyTurn();
+      await enemyTurn();
     }
     updateStatsPanel();
     updateStatus();
@@ -511,7 +568,7 @@ function useItemById(itemId) {
     }
 
     removeItem(itemId, 1);
-    applyDamageToEnemy(9, "Bomba");
+    await applyDamageToEnemy(9, "Bomba");
   }
 }
 
@@ -602,27 +659,27 @@ function render() {
   requestAnimationFrame(render);
 }
 
-attackButton.addEventListener("click", () => {
-  if (!state.activeEncounter) return;
-
-  const minDamage = getPlayerAtk();
-  const damage = minDamage + Math.floor(Math.random() * 4);
-  applyDamageToEnemy(damage, "Ataque");
+attackButton.addEventListener("click", async () => {
+  await runPlayerAction(async () => {
+    const minDamage = getPlayerAtk();
+    const damage = minDamage + Math.floor(Math.random() * 4);
+    await applyDamageToEnemy(damage, "Ataque");
+  });
 });
 
-healButton.addEventListener("click", () => {
-  if (!state.activeEncounter) return;
-
-  const heal = Math.floor(Math.random() * 4) + 3;
-  player.hp = Math.min(getMaxHp(), player.hp + heal);
-  battleLogElement.textContent = `Te curas ${heal} puntos.`;
-  updateCombatStats();
-  updateStatsPanel();
-  updateStatus();
-  enemyTurn();
+healButton.addEventListener("click", async () => {
+  await runPlayerAction(async () => {
+    const heal = Math.floor(Math.random() * 4) + 3;
+    player.hp = Math.min(getMaxHp(), player.hp + heal);
+    battleLogElement.textContent = `Te curas ${heal} puntos.`;
+    updateCombatStats();
+    updateStatsPanel();
+    updateStatus();
+    await enemyTurn();
+  });
 });
 
-inventoryListElement.addEventListener("click", (event) => {
+inventoryListElement.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
 
@@ -630,7 +687,15 @@ inventoryListElement.addEventListener("click", (event) => {
   const itemId = Number(target.getAttribute("data-item-id"));
   if (!itemId) return;
 
-  if (action === "use") useItemById(itemId);
+  if (action === "use") {
+    if (state.activeEncounter) {
+      await runPlayerAction(async () => {
+        await useItemById(itemId);
+      });
+      return;
+    }
+    await useItemById(itemId);
+  }
   if (action === "drop") dropItemById(itemId);
 });
 
@@ -681,6 +746,8 @@ routeSelect.addEventListener("change", () => {
   switchRoute(routeSelect.value);
 });
 
+setCombatTurn("player");
+setCombatControlsEnabled(true);
 renderInventory();
 renderParty();
 switchRoute(routeSelect.value);

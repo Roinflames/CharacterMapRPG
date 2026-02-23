@@ -3,11 +3,15 @@ const ctx = canvas.getContext("2d");
 
 const statusElement = document.getElementById("milestones-status");
 const messageElement = document.getElementById("milestone-message");
+const storyLineElement = document.getElementById("story-line");
 const routeSelect = document.getElementById("route-select");
 const progressRouteElement = document.getElementById("progress-route");
 const progressTotalElement = document.getElementById("progress-total");
 const progressEtaElement = document.getElementById("progress-eta");
 const progressNextElement = document.getElementById("progress-next");
+const heroAliasElement = document.getElementById("hero-alias");
+const weaponSelectElement = document.getElementById("weapon-select");
+const armorSelectElement = document.getElementById("armor-select");
 const characterStatsElement = document.getElementById("character-stats");
 const characterBonusElement = document.getElementById("character-bonus");
 const partyListElement = document.getElementById("party-list");
@@ -32,6 +36,11 @@ const fullscreenButton = document.getElementById("fullscreen-btn");
 
 const TILE = 32;
 const MAX_PARTY_SIZE = 3;
+const MAIN_HERO = {
+  publicName: "Jisuo Tenma",
+  hiddenLoreName: "Jesus",
+  title: "Portador de la Luz",
+};
 
 const ITEM_DEFS = {
   potion: { name: "Pocion", effect: "Recupera 8 HP" },
@@ -39,29 +48,43 @@ const ITEM_DEFS = {
   elixir: { name: "Elixir", effect: "Sube HP maximo +2 y cura 5" },
 };
 
+const WEAPONS = [
+  { id: "none", name: "Sin arma", atk: 0, def: 0, hp: 0 },
+  { id: "blade_light", name: "Katana de Luz", atk: 3, def: 0, hp: 0 },
+  { id: "spear_heaven", name: "Lanza Celeste", atk: 2, def: 1, hp: 0 },
+  { id: "infernal_hammer", name: "Martillo Infernal", atk: 4, def: -1, hp: 0 },
+];
+
+const ARMORS = [
+  { id: "none", name: "Sin armadura", atk: 0, def: 0, hp: 0 },
+  { id: "aegis_cloth", name: "Manto Aegis", atk: 0, def: 2, hp: 2 },
+  { id: "dragon_plate", name: "Placas Draconicas", atk: 0, def: 3, hp: 1 },
+  { id: "shadow_mail", name: "Cota Umbria", atk: 1, def: 1, hp: 0 },
+];
+
 const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
 const ROUTE_ORDER = ["route1", "route2"];
 const COMBAT_SCENE_ASSET = "assets/combat/arena.svg";
 const ENEMY_ASSETS = {
-  "Lobo Sombrio": "assets/enemies/lobo-sombrio.svg",
-  "Bandido del Valle": "assets/enemies/bandido-del-valle.svg",
-  "Guardian de Piedra": "assets/enemies/guardian-de-piedra.svg",
-  "Capitan del Portal": "assets/enemies/capitan-del-portal.svg",
-  "Bruja del Pantano": "assets/enemies/bruja-del-pantano.svg",
-  "Caballero Perdido": "assets/enemies/caballero-perdido.svg",
-  "Bestia de Ceniza": "assets/enemies/bestia-de-ceniza.svg",
-  "Arquero del Eclipse": "assets/enemies/arquero-del-eclipse.svg",
-  "Dragon Menor": "assets/enemies/dragon-menor.svg",
+  "Lobo Sombrio": "assets/enemies/lobo-sombrio.webp",
+  "Bandido del Valle": "assets/enemies/bandido-del-valle.webp",
+  "Guardian de Piedra": "assets/enemies/guardian-de-piedra.webp",
+  "Capitan del Portal": "assets/enemies/capitan-del-portal.webp",
+  "Bruja del Pantano": "assets/enemies/bruja-del-pantano.webp",
+  "Caballero Perdido": "assets/enemies/caballero-perdido.webp",
+  "Bestia de Ceniza": "assets/enemies/bestia-de-ceniza.webp",
+  "Arquero del Eclipse": "assets/enemies/arquero-del-eclipse.webp",
+  "Dragon Menor": "assets/enemies/dragon-menor.webp",
 };
 
 const RACES = {
-  humano: { label: "Humano", color: "#f59e0b", style: "fisico" },
-  elfo: { label: "Elfo", color: "#10b981", style: "magico" },
-  enano: { label: "Enano", color: "#ef4444", style: "fisico" },
-  orco: { label: "Orco", color: "#84cc16", style: "fisico" },
-  draconico: { label: "Draconico", color: "#f97316", style: "magico" },
-  umbrio: { label: "Umbrio", color: "#a855f7", style: "magico", dominateAll: true, hardToOccupy: true },
-  celestial: { label: "Celestial", color: "#22d3ee", style: "magico" },
+  humano: { label: "Humano", color: "#f59e0b", style: "fisico", faction: "cielo" },
+  elfo: { label: "Elfo", color: "#10b981", style: "magico", faction: "cielo" },
+  enano: { label: "Enano", color: "#ef4444", style: "fisico", faction: "cielo" },
+  orco: { label: "Orco", color: "#84cc16", style: "fisico", faction: "infierno" },
+  draconico: { label: "Draconico", color: "#f97316", style: "magico", faction: "infierno" },
+  umbrio: { label: "Umbrio", color: "#a855f7", style: "magico", faction: "infierno", dominateAll: true, hardToOccupy: true },
+  celestial: { label: "Celestial", color: "#22d3ee", style: "magico", faction: "cielo" },
 };
 
 const COMPANIONS = [
@@ -158,6 +181,7 @@ const state = {
   party: [],
   summons: SUMMONS.map((summon) => ({ ...summon })),
   activeSummonId: "phoenix",
+  equipment: { weaponId: "none", armorId: "none" },
   summonEssence: 0,
   combatHistory: [],
   combatTurn: "player",
@@ -171,6 +195,20 @@ function setCombatModalOpen(isOpen) {
 
 function getRaceMeta(raceKey) {
   return RACES[raceKey] || RACES.humano;
+}
+
+function getFactionLabel(raceKey) {
+  const faction = getRaceMeta(raceKey).faction;
+  return faction === "infierno" ? "Infierno" : "Cielo";
+}
+
+function getEnemyAssetWithFallback(enemyName) {
+  const primary = ENEMY_ASSETS[enemyName] || COMBAT_SCENE_ASSET;
+  if (!primary.endsWith(".webp")) {
+    return { primary, fallback: COMBAT_SCENE_ASSET };
+  }
+  const fallback = primary.replace(/\.webp$/i, ".svg");
+  return { primary, fallback };
 }
 
 function getRaceBadgeHTML(raceKey) {
@@ -253,6 +291,18 @@ function getNextRouteId(routeId) {
   return ROUTE_ORDER[idx + 1] || null;
 }
 
+function getEquipmentBonus() {
+  const weapon = WEAPONS.find((entry) => entry.id === state.equipment.weaponId) || WEAPONS[0];
+  const armor = ARMORS.find((entry) => entry.id === state.equipment.armorId) || ARMORS[0];
+  return {
+    atk: weapon.atk + armor.atk,
+    def: weapon.def + armor.def,
+    hp: weapon.hp + armor.hp,
+    weapon,
+    armor,
+  };
+}
+
 function getPartyBonus() {
   return state.party.reduce(
     (acc, member) => {
@@ -266,7 +316,7 @@ function getPartyBonus() {
 }
 
 function getMaxHp() {
-  return player.baseMaxHp + getPartyBonus().hp + getSummonBonus().hp;
+  return player.baseMaxHp + getPartyBonus().hp + getSummonBonus().hp + getEquipmentBonus().hp;
 }
 
 function getTotalItems() {
@@ -274,11 +324,11 @@ function getTotalItems() {
 }
 
 function getPlayerAtk() {
-  return player.baseAtk + getPartyBonus().atk + getSummonBonus().atk;
+  return player.baseAtk + getPartyBonus().atk + getSummonBonus().atk + getEquipmentBonus().atk;
 }
 
 function getPlayerDef() {
-  return player.baseDef + getPartyBonus().def + getSummonBonus().def;
+  return player.baseDef + getPartyBonus().def + getSummonBonus().def + getEquipmentBonus().def;
 }
 
 function getPlayerRaceKey() {
@@ -327,6 +377,11 @@ function updateProgressPanel() {
   progressTotalElement.textContent = `Progreso total: ${totalPercentage}% (${completedMilestones}/${totalMilestones} hitos)`;
   progressEtaElement.textContent = pendingInRoute === 0 ? "ETA ruta actual: lista para cierre" : `ETA ruta actual: ~${etaMinutes} min`;
   progressNextElement.textContent = `Siguiente objetivo: ${nextLabel}`;
+}
+
+function updateStoryLine(message) {
+  if (!storyLineElement) return;
+  storyLineElement.textContent = message;
 }
 
 function findItem(type) {
@@ -493,8 +548,17 @@ function trainSummon(summonId) {
 function updateStatsPanel() {
   const maxHp = getMaxHp();
   const bonus = getPartyBonus();
+  const equip = getEquipmentBonus();
+  heroAliasElement.textContent = `Alias: ${MAIN_HERO.publicName} (${MAIN_HERO.title})`;
   characterStatsElement.textContent = `Nivel ${player.level} | EXP ${player.exp}/${player.nextExp} | HP ${player.hp}/${maxHp} | ATQ ${getPlayerAtk()} | DEF ${getPlayerDef()}`;
-  characterBonusElement.textContent = `Bonos de equipo: +${bonus.atk} ATQ, +${bonus.def} DEF, +${bonus.hp} HP.`;
+  characterBonusElement.textContent = `Bonos aliados: +${bonus.atk} ATQ, +${bonus.def} DEF, +${bonus.hp} HP | Equipo: ${equip.weapon.name} / ${equip.armor.name}.`;
+}
+
+function renderEquipment() {
+  weaponSelectElement.innerHTML = WEAPONS.map((entry) => `<option value="${entry.id}">${entry.name}</option>`).join("");
+  armorSelectElement.innerHTML = ARMORS.map((entry) => `<option value="${entry.id}">${entry.name}</option>`).join("");
+  weaponSelectElement.value = state.equipment.weaponId;
+  armorSelectElement.value = state.equipment.armorId;
 }
 
 function addPartyMember(memberId) {
@@ -591,7 +655,7 @@ function switchRoute(routeId, customMessage) {
   setCombatTurn("player");
   setCombatControlsEnabled(true);
   setCombatModalOpen(false);
-  messageElement.textContent = customMessage || `Entraste en ${state.route.label}.`;
+  messageElement.textContent = customMessage || `${MAIN_HERO.publicName} entra en ${state.route.label}.`;
   updateStatsPanel();
   updateStatus();
 }
@@ -638,6 +702,8 @@ function endEncounterWithVictory() {
   state.summonEssence += 1;
   gainExp(earnedExp);
   renderSummons();
+  const faction = getFactionLabel(milestone.race || "humano");
+  updateStoryLine(`La balanza se inclina hacia ${faction} tras vencer a ${milestone.enemy}.`);
   logCombatEvent(`Victoria sobre ${milestone.enemy}: +${earnedExp} EXP, +1 esencia.`);
   messageElement.textContent = `Hito superado: ${milestone.enemy}. +${earnedExp} EXP, loot: ${lootName}.`;
   updateStatus();
@@ -680,14 +746,21 @@ function startEncounter(milestone) {
   state.combatLocked = false;
 
   combatSceneImageElement.src = COMBAT_SCENE_ASSET;
-  enemyImageElement.src = ENEMY_ASSETS[milestone.enemy] || COMBAT_SCENE_ASSET;
+  const enemyAsset = getEnemyAssetWithFallback(milestone.enemy);
+  enemyImageElement.onerror = () => {
+    enemyImageElement.onerror = null;
+    enemyImageElement.src = enemyAsset.fallback;
+  };
+  enemyImageElement.src = enemyAsset.primary;
   enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
   setCombatModalOpen(true);
   setCombatTurn("player");
   setCombatControlsEnabled(true);
   const raceMeta = getRaceMeta(milestone.race || "humano");
-  enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style})`;
+  const factionLabel = getFactionLabel(milestone.race || "humano");
+  enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style} | ${factionLabel})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
+  updateStoryLine(`Combate activo: ${milestone.enemy} representa al ${factionLabel}.`);
   diceRollElement.textContent = "d20: --";
   logCombatEvent(`Inicia combate contra ${milestone.enemy}.`);
   updateCombatStats();
@@ -1019,8 +1092,51 @@ summonListElement.addEventListener("click", (event) => {
   if (action === "train") trainSummon(summonId);
 });
 
+weaponSelectElement.addEventListener("change", () => {
+  if (state.activeEncounter) {
+    weaponSelectElement.value = state.equipment.weaponId;
+    messageElement.textContent = "No puedes cambiar arma durante combate.";
+    return;
+  }
+  state.equipment.weaponId = weaponSelectElement.value;
+  const equipped = getEquipmentBonus().weapon.name;
+  messageElement.textContent = `Arma equipada: ${equipped}.`;
+  logCombatEvent(`Arma equipada: ${equipped}.`);
+  updateStatsPanel();
+  updateStatus();
+});
+
+armorSelectElement.addEventListener("change", () => {
+  if (state.activeEncounter) {
+    armorSelectElement.value = state.equipment.armorId;
+    messageElement.textContent = "No puedes cambiar armadura durante combate.";
+    return;
+  }
+  state.equipment.armorId = armorSelectElement.value;
+  const equipped = getEquipmentBonus().armor.name;
+  messageElement.textContent = `Armadura equipada: ${equipped}.`;
+  logCombatEvent(`Armadura equipada: ${equipped}.`);
+  updateStatsPanel();
+  updateStatus();
+});
+
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
+
+  if (state.activeEncounter) {
+    if (key === "a") {
+      attackButton.click();
+      return;
+    }
+    if (key === "c") {
+      healButton.click();
+      return;
+    }
+    if (key === "e") {
+      escapeButton.click();
+      return;
+    }
+  }
 
   if (key === "arrowup" || key === "w") move(0, -1);
   if (key === "arrowdown" || key === "s") move(0, 1);
@@ -1072,6 +1188,7 @@ setCombatControlsEnabled(true);
 renderInventory();
 renderParty();
 renderSummons();
+renderEquipment();
 renderCombatHistory();
 switchRoute(routeSelect.value);
 render();

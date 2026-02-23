@@ -10,7 +10,7 @@
     <main class="layout">
       <section class="panel">
         <h1>Character Map RPG</h1>
-        <p>Muevete con <strong>WASD</strong> o <strong>flechas</strong>, supera los enfrentamientos y llega a la meta.</p>
+        <p>Muevete con <strong>WASD</strong> o <strong>flechas</strong>. La guerra final enfrenta a las legiones del <strong>Cielo</strong> y el <strong>Infierno</strong>.</p>
         <div class="route-picker">
           <label for="route-select">Ruta:</label>
           <select id="route-select">
@@ -20,7 +20,12 @@
         </div>
         <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
-        <p class="version">UI v0.14.0</p>
+        <p class="version">UI v0.16.0</p>
+      </section>
+
+      <section class="inventory" aria-label="Historia principal">
+        <h2>Historia: Cielo vs Infierno</h2>
+        <p id="story-line" class="inventory-help">Dos reinos en guerra abren rutas de combate. Decide a que frente apoyar en cada victoria.</p>
       </section>
 
       <section class="inventory" aria-label="Estimaciones de avance">
@@ -52,6 +57,13 @@
           <section class="meta-grid">
             <section class="character-card" aria-label="Stats del personaje">
               <h2>Personaje</h2>
+              <p id="hero-alias" class="inventory-help">Alias: Jisuo Tenma</p>
+              <div class="equipment-grid">
+                <label for="weapon-select">Arma</label>
+                <select id="weapon-select"></select>
+                <label for="armor-select">Armadura</label>
+                <select id="armor-select"></select>
+              </div>
               <p id="character-stats">Nivel 1 | EXP 0/20 | HP 24/24 | ATQ 4 | DEF 1</p>
               <p id="character-bonus">Bonos de equipo: +0 ATQ, +0 DEF, +0 HP.</p>
             </section>
@@ -114,6 +126,7 @@
         <p id="combat-stats">HP jugador: 20 | HP enemigo: 0</p>
         <p id="turn-indicator" class="turn-indicator">Turno: Jugador</p>
         <p id="dice-roll" class="dice-roll">d20: --</p>
+        <p class="inventory-help">Atajos: A atacar, C curar, E escapar.</p>
         <p id="battle-log">Explora el mapa para iniciar un combate.</p>
         <span id="player-float-text" class="float-text player-float hidden"></span>
         <div class="encounter-actions">

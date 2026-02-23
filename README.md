@@ -1,4 +1,4 @@
-# Character Map (UI v0.14.0)
+# Character Map (UI v0.16.0)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,12 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.16.0`: sistema de equipamiento (arma + armadura) con impacto en ATQ/DEF/HP y bloqueo de cambios durante combate.
+- `v0.15.2`: protagonista principal con alias japones en UI (`Jisuo Tenma`) y rol narrativo de portador de la luz.
+- `v0.15.1`: narrativa de guerra entre Cielo vs Infierno integrada a historia y combates.
+- `v0.15.0`: retratos en webp con tratamiento visual retro para combate.
+- `v0.14.2`: atajos de teclado en combate (A atacar, C curar, E escapar).
+- `v0.14.1`: layout top-aligned y columna de reclutas compacta con scroll para evitar grandes huecos visuales.
 - `v0.14.0`: sistema d20 para golpes criticos/fallo duro en ataques y feedback de tirada en combate.
 - `v0.13.2`: boton de pantalla completa para maximizar el juego en sesion de juego.
 - `v0.13.1`: cambio bidireccional entre rutas sin perder progreso y opcion de escapar de combate (con probabilidad y riesgo).

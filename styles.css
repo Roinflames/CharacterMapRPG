@@ -20,7 +20,8 @@ body {
     radial-gradient(circle at 80% 75%, rgba(0, 0, 0, 0.25), transparent 35%),
     linear-gradient(135deg, var(--bg-1), var(--bg-2));
   display: grid;
-  place-items: center;
+  justify-items: center;
+  align-items: start;
   padding: 1rem;
   overflow-x: auto;
 }
@@ -91,6 +92,7 @@ body {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
   gap: 1rem;
+  align-items: start;
 }
 
 .left-column,
@@ -116,6 +118,29 @@ body {
 .character-card p,
 .inventory-help {
   margin: 0.5rem 0 0;
+}
+
+.equipment-grid {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: 92px 1fr;
+  gap: 0.3rem 0.5rem;
+  align-items: center;
+}
+
+.equipment-grid label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.equipment-grid select {
+  min-width: 130px;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(8, 27, 39, 0.78);
+  color: var(--text);
 }
 
 .party-card h3 {
@@ -195,7 +220,12 @@ canvas {
   transform: translate(-50%, -50%);
   width: min(520px, calc(100vw - 3rem));
   z-index: 20;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+  border-radius: 4px;
+  border: 2px solid rgba(141, 224, 255, 0.65);
+  background:
+    linear-gradient(180deg, rgba(8, 26, 39, 0.96), rgba(12, 41, 59, 0.93));
+  font-family: "Trebuchet MS", "Verdana", sans-serif;
 }
 
 .combat-backdrop {
@@ -210,10 +240,11 @@ canvas {
   width: 100%;
   max-height: 180px;
   object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  border: 2px solid rgba(132, 220, 255, 0.55);
   margin-bottom: 0.55rem;
   background: rgba(255, 255, 255, 0.08);
+  image-rendering: pixelated;
 }
 
 .enemy-frame {
@@ -224,10 +255,11 @@ canvas {
   width: 100%;
   max-height: 130px;
   object-fit: cover;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 4px;
+  border: 2px solid rgba(132, 220, 255, 0.42);
   margin-bottom: 0.55rem;
-  opacity: 0.95;
+  opacity: 0.94;
+  image-rendering: pixelated;
 }
 
 #combat-stats {
@@ -256,8 +288,9 @@ canvas {
 
 .hp-track {
   height: 12px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  background: rgba(9, 18, 24, 0.7);
+  border: 1px solid rgba(134, 220, 255, 0.35);
   overflow: hidden;
 }
 
@@ -268,23 +301,27 @@ canvas {
 }
 
 .hp-fill.player {
-  background: linear-gradient(90deg, #2dd4bf, #0ea5a3);
+  background: linear-gradient(90deg, #20d7ff, #0da0d8);
 }
 
 .hp-fill.enemy {
-  background: linear-gradient(90deg, #fb7185, #ef4444);
+  background: linear-gradient(90deg, #ff7676, #eb3d57);
 }
 
 .turn-indicator {
   margin: 0.35rem 0 0;
   font-weight: 700;
-  color: #ffd166;
+  color: #ffe084;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .dice-roll {
   margin: 0.3rem 0 0;
   font-weight: 700;
-  color: #c4f1ff;
+  color: #89ebff;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 #battle-log {
@@ -316,9 +353,15 @@ canvas {
   display: grid;
   place-items: center;
   gap: 0.6rem;
-  justify-self: center;
+  justify-self: start;
   width: fit-content;
   min-width: 220px;
+}
+
+#party-list,
+#recruit-list {
+  max-height: 220px;
+  overflow: auto;
 }
 
 .controls div {
@@ -337,7 +380,7 @@ canvas {
 
 button {
   border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 10px;
+  border-radius: 4px;
   background: rgba(255, 255, 255, 0.18);
   color: var(--text);
   font-size: 1rem;
@@ -353,18 +396,18 @@ button {
 }
 
 #attack-btn {
-  background: rgba(255, 90, 95, 0.25);
-  border-color: rgba(255, 90, 95, 0.65);
+  background: rgba(255, 90, 95, 0.33);
+  border-color: rgba(255, 90, 95, 0.82);
 }
 
 #heal-btn {
-  background: rgba(42, 157, 143, 0.25);
-  border-color: rgba(42, 157, 143, 0.65);
+  background: rgba(42, 157, 143, 0.33);
+  border-color: rgba(42, 157, 143, 0.82);
 }
 
 #escape-btn {
-  background: rgba(245, 158, 11, 0.24);
-  border-color: rgba(245, 158, 11, 0.68);
+  background: rgba(245, 158, 11, 0.33);
+  border-color: rgba(245, 158, 11, 0.82);
 }
 
 button:disabled {

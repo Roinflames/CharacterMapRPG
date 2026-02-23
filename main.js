@@ -20,7 +20,6 @@ const summonEssenceElement = document.getElementById("summon-essence");
 const summonListElement = document.getElementById("summon-list");
 const combatHistoryElement = document.getElementById("combat-history");
 const combatBackdrop = document.getElementById("combat-backdrop");
-const sceneParallaxElement = document.getElementById("scene-parallax");
 const combatSceneBackElement = document.getElementById("combat-scene-back");
 const combatSceneFrontElement = document.getElementById("combat-scene-front");
 const encounterPanel = document.getElementById("encounter-panel");
@@ -211,13 +210,15 @@ function resetSceneParallax() {
 }
 
 function updateSceneParallaxFromPointer(event) {
-  if (!sceneParallaxElement || !combatSceneBackElement || !combatSceneFrontElement || !enemyImageElement) return;
+  if (!encounterPanel || !combatSceneBackElement || !combatSceneFrontElement || !enemyImageElement) return;
   if (encounterPanel.classList.contains("hidden")) return;
-  const rect = sceneParallaxElement.getBoundingClientRect();
+  const rect = encounterPanel.getBoundingClientRect();
   if (rect.width === 0 || rect.height === 0) return;
 
-  const px = (event.clientX - rect.left) / rect.width - 0.5;
-  const py = (event.clientY - rect.top) / rect.height - 0.5;
+  const normalizedX = (event.clientX - rect.left) / rect.width - 0.5;
+  const normalizedY = (event.clientY - rect.top) / rect.height - 0.5;
+  const px = Math.max(-0.5, Math.min(0.5, normalizedX));
+  const py = Math.max(-0.5, Math.min(0.5, normalizedY));
 
   const backX = Math.round(px * 8);
   const backY = Math.round(py * 6);

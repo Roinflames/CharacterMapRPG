@@ -11,9 +11,16 @@
       <section class="panel">
         <h1>Character Map RPG</h1>
         <p>Muévete con <strong>WASD</strong> o <strong>flechas</strong>, supera los enfrentamientos y llega a la meta.</p>
-        <p id="milestones-status" class="status">Hitos: 0/4</p>
+        <div class="route-picker">
+          <label for="route-select">Ruta:</label>
+          <select id="route-select">
+            <option value="route1">Ruta 1</option>
+            <option value="route2">Ruta 2</option>
+          </select>
+        </div>
+        <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
-        <p class="version">UI v0.3.0</p>
+        <p class="version">UI v0.4.0</p>
       </section>
 
       <section class="game-shell" aria-label="Mapa del juego">

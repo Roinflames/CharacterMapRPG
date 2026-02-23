@@ -4,8 +4,8 @@
 
 - Proyecto: Character Map
 - Tipo: Frontend estático (HTML/CSS/JS)
-- Versión activa UI: `v0.3.0`
-- Objetivo actual: mapa de ruta con hitos de enfrentamiento RPG
+- Versión activa UI: `v0.4.0`
+- Objetivo actual: soporte multi-ruta con encuentros RPG
 
 ## Reglas operativas locales
 

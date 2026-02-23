@@ -4,7 +4,6 @@
   --surface: rgba(255, 255, 255, 0.1);
   --text: #f5f4ef;
   --accent: #ffd166;
-  --danger: #ff5a5f;
 }
 
 * {
@@ -50,8 +49,24 @@ body {
   margin: 0;
 }
 
+.route-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+}
+
+.route-picker select {
+  min-width: 130px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(10, 26, 35, 0.9);
+  color: var(--text);
+}
+
 .status {
-  margin-top: 0.4rem;
+  margin-top: 0.45rem;
   font-weight: 700;
   color: var(--accent);
 }

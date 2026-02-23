@@ -3,6 +3,7 @@ const ctx = canvas.getContext("2d");
 
 const statusElement = document.getElementById("milestones-status");
 const messageElement = document.getElementById("milestone-message");
+const routeSelect = document.getElementById("route-select");
 const encounterPanel = document.getElementById("encounter-panel");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
@@ -11,59 +12,101 @@ const attackButton = document.getElementById("attack-btn");
 const healButton = document.getElementById("heal-btn");
 
 const TILE = 32;
-const MAP = [
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-  [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
-  [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1],
-  [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
-  [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
-  [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
-  [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-  [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
-  [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1],
-  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-];
 
-const milestones = [
-  { id: "m1", x: 4, y: 1, enemy: "Lobo Sombrio", hp: 12, completed: false },
-  { id: "m2", x: 8, y: 5, enemy: "Bandido del Valle", hp: 14, completed: false },
-  { id: "m3", x: 13, y: 7, enemy: "Guardian de Piedra", hp: 16, completed: false },
-  { id: "m4", x: 17, y: 9, enemy: "Capitan del Portal", hp: 18, completed: false },
-];
+const ROUTES = {
+  route1: {
+    label: "Ruta 1",
+    start: { x: 1, y: 1 },
+    map: [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+      [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+      [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+      [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+      [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+      [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ],
+    milestones: [
+      { id: "r1m1", x: 4, y: 1, enemy: "Lobo Sombrio", hp: 12, completed: false },
+      { id: "r1m2", x: 8, y: 5, enemy: "Bandido del Valle", hp: 14, completed: false },
+      { id: "r1m3", x: 13, y: 7, enemy: "Guardian de Piedra", hp: 16, completed: false },
+      { id: "r1m4", x: 17, y: 9, enemy: "Capitan del Portal", hp: 18, completed: false },
+    ],
+  },
+  route2: {
+    label: "Ruta 2",
+    start: { x: 1, y: 9 },
+    map: [
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1],
+      [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
+      [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
+      [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+      [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    ],
+    milestones: [
+      { id: "r2m1", x: 3, y: 9, enemy: "Bruja del Pantano", hp: 13, completed: false },
+      { id: "r2m2", x: 7, y: 6, enemy: "Caballero Perdido", hp: 15, completed: false },
+      { id: "r2m3", x: 11, y: 5, enemy: "Bestia de Ceniza", hp: 17, completed: false },
+      { id: "r2m4", x: 15, y: 3, enemy: "Arquero del Eclipse", hp: 18, completed: false },
+      { id: "r2m5", x: 17, y: 1, enemy: "Dragon Menor", hp: 20, completed: false },
+    ],
+  },
+};
 
 const player = { x: 1, y: 1, hp: 24, maxHp: 24, won: false };
-const state = { activeEncounter: null };
+const state = {
+  activeEncounter: null,
+  routeId: "route1",
+  route: ROUTES.route1,
+};
 
-function resetRun() {
-  player.x = 1;
-  player.y = 1;
+function resetRun(customMessage) {
+  const route = state.route;
+  player.x = route.start.x;
+  player.y = route.start.y;
   player.hp = player.maxHp;
   player.won = false;
   state.activeEncounter = null;
 
-  milestones.forEach((milestone) => {
+  route.milestones.forEach((milestone) => {
     milestone.completed = false;
   });
 
   encounterPanel.classList.add("hidden");
-  messageElement.textContent = "Ruta reiniciada. Vuelve a intentarlo.";
+  messageElement.textContent = customMessage || `Reinicio en ${route.label}.`;
   updateStatus();
 }
 
+function switchRoute(routeId) {
+  state.routeId = routeId;
+  state.route = ROUTES[routeId];
+  resetRun(`Entraste en ${state.route.label}.`);
+}
+
 function canMove(nextX, nextY) {
-  if (nextY < 0 || nextY >= MAP.length) return false;
-  if (nextX < 0 || nextX >= MAP[0].length) return false;
-  return MAP[nextY][nextX] !== 1;
+  const map = state.route.map;
+  if (nextY < 0 || nextY >= map.length) return false;
+  if (nextX < 0 || nextX >= map[0].length) return false;
+  return map[nextY][nextX] !== 1;
 }
 
 function getMilestoneAt(x, y) {
-  return milestones.find((milestone) => milestone.x === x && milestone.y === y);
+  return state.route.milestones.find((milestone) => milestone.x === x && milestone.y === y);
 }
 
 function updateStatus() {
-  const completed = milestones.filter((milestone) => milestone.completed).length;
-  statusElement.textContent = `Hitos: ${completed}/${milestones.length} | HP: ${player.hp}/${player.maxHp}`;
+  const completed = state.route.milestones.filter((milestone) => milestone.completed).length;
+  statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | HP: ${player.hp}/${player.maxHp}`;
 }
 
 function updateCombatStats() {
@@ -88,7 +131,7 @@ function enemyTurn() {
 
   if (player.hp <= 0) {
     battleLogElement.textContent = `Recibiste ${damage}. Has caido.`;
-    resetRun();
+    resetRun(`Derrota en ${state.route.label}.`);
     return;
   }
 
@@ -110,13 +153,14 @@ function startEncounter(milestone) {
 }
 
 function tryFinishMap() {
-  if (MAP[player.y][player.x] !== 2) return;
+  const map = state.route.map;
+  if (map[player.y][player.x] !== 2) return;
 
-  const completedAll = milestones.every((milestone) => milestone.completed);
+  const completedAll = state.route.milestones.every((milestone) => milestone.completed);
 
   if (completedAll) {
     player.won = true;
-    messageElement.textContent = "Victoria total. Derrotaste todos los hitos.";
+    messageElement.textContent = `Victoria total en ${state.route.label}.`;
     return;
   }
 
@@ -164,7 +208,7 @@ function drawTile(tile, x, y) {
 }
 
 function drawMilestones() {
-  milestones.forEach((milestone) => {
+  state.route.milestones.forEach((milestone) => {
     const px = milestone.x * TILE;
     const py = milestone.y * TILE;
 
@@ -208,9 +252,10 @@ function drawWinMessage() {
 }
 
 function render() {
-  for (let y = 0; y < MAP.length; y += 1) {
-    for (let x = 0; x < MAP[y].length; x += 1) {
-      drawTile(MAP[y][x], x, y);
+  const map = state.route.map;
+  for (let y = 0; y < map.length; y += 1) {
+    for (let x = 0; x < map[y].length; x += 1) {
+      drawTile(map[y][x], x, y);
     }
   }
 
@@ -256,7 +301,7 @@ window.addEventListener("keydown", (event) => {
   if (key === "arrowleft" || key === "a") move(-1, 0);
   if (key === "arrowright" || key === "d") move(1, 0);
 
-  if (key === "r") resetRun();
+  if (key === "r") resetRun(`Reinicio manual en ${state.route.label}.`);
 });
 
 document.querySelectorAll("button[data-dir]").forEach((button) => {
@@ -269,5 +314,9 @@ document.querySelectorAll("button[data-dir]").forEach((button) => {
   });
 });
 
-updateStatus();
+routeSelect.addEventListener("change", () => {
+  switchRoute(routeSelect.value);
+});
+
+switchRoute(routeSelect.value);
 render();

@@ -331,7 +331,8 @@ button {
 }
 
 #attack-btn,
-#heal-btn {
+#heal-btn,
+#escape-btn {
   min-width: 120px;
   min-height: 44px;
 }
@@ -344,6 +345,11 @@ button {
 #heal-btn {
   background: rgba(42, 157, 143, 0.25);
   border-color: rgba(42, 157, 143, 0.65);
+}
+
+#escape-btn {
+  background: rgba(245, 158, 11, 0.24);
+  border-color: rgba(245, 158, 11, 0.68);
 }
 
 button:disabled {

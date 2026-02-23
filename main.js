@@ -4,6 +4,10 @@ const ctx = canvas.getContext("2d");
 const statusElement = document.getElementById("milestones-status");
 const messageElement = document.getElementById("milestone-message");
 const routeSelect = document.getElementById("route-select");
+const progressRouteElement = document.getElementById("progress-route");
+const progressTotalElement = document.getElementById("progress-total");
+const progressEtaElement = document.getElementById("progress-eta");
+const progressNextElement = document.getElementById("progress-next");
 const characterStatsElement = document.getElementById("character-stats");
 const characterBonusElement = document.getElementById("character-bonus");
 const partyListElement = document.getElementById("party-list");
@@ -22,6 +26,7 @@ const battleLogElement = document.getElementById("battle-log");
 const inventoryListElement = document.getElementById("inventory-list");
 const attackButton = document.getElementById("attack-btn");
 const healButton = document.getElementById("heal-btn");
+const escapeButton = document.getElementById("escape-btn");
 
 const TILE = 32;
 const MAX_PARTY_SIZE = 3;
@@ -140,6 +145,12 @@ const state = {
   activeEncounter: null,
   routeId: "route1",
   route: ROUTES.route1,
+  routeState: Object.fromEntries(
+    ROUTE_ORDER.map((routeId) => [
+      routeId,
+      { x: ROUTES[routeId].start.x, y: ROUTES[routeId].start.y, initialized: false },
+    ]),
+  ),
   inventory: [],
   nextItemId: 1,
   party: [],
@@ -198,6 +209,7 @@ function renderCombatHistory() {
 function setCombatControlsEnabled(enabled) {
   attackButton.disabled = !enabled;
   healButton.disabled = !enabled;
+  escapeButton.disabled = !enabled;
 }
 
 function setCombatTurn(turn) {
@@ -285,6 +297,34 @@ function getRaceDamageMultiplier(attackerRaceKey, defenderRaceKey) {
   if (attacker.style === "magico" && defender.style === "fisico") multiplier *= 1.08;
 
   return multiplier;
+}
+
+function computeRouteProgress(route) {
+  const total = route.milestones.length;
+  const completed = route.milestones.filter((milestone) => milestone.completed).length;
+  const percentage = total === 0 ? 100 : Math.round((completed / total) * 100);
+  return { total, completed, percentage };
+}
+
+function updateProgressPanel() {
+  const current = computeRouteProgress(state.route);
+  const allRoutes = ROUTE_ORDER.map((routeId) => ROUTES[routeId]);
+  const totalMilestones = allRoutes.reduce((sum, route) => sum + route.milestones.length, 0);
+  const completedMilestones = allRoutes.reduce(
+    (sum, route) => sum + route.milestones.filter((milestone) => milestone.completed).length,
+    0,
+  );
+  const totalPercentage = totalMilestones === 0 ? 100 : Math.round((completedMilestones / totalMilestones) * 100);
+
+  const pendingInRoute = current.total - current.completed;
+  const etaMinutes = pendingInRoute * 2;
+  const nextMilestone = state.route.milestones.find((milestone) => !milestone.completed);
+  const nextLabel = nextMilestone ? `${nextMilestone.enemy} (${getRaceMeta(nextMilestone.race).label})` : "Completar meta final";
+
+  progressRouteElement.textContent = `${state.route.label}: ${current.percentage}% completada (${current.completed}/${current.total} hitos)`;
+  progressTotalElement.textContent = `Progreso total: ${totalPercentage}% (${completedMilestones}/${totalMilestones} hitos)`;
+  progressEtaElement.textContent = pendingInRoute === 0 ? "ETA ruta actual: lista para cierre" : `ETA ruta actual: ~${etaMinutes} min`;
+  progressNextElement.textContent = `Siguiente objetivo: ${nextLabel}`;
 }
 
 function findItem(type) {
@@ -521,6 +561,7 @@ function resetRun(customMessage) {
   route.milestones.forEach((milestone) => {
     milestone.completed = false;
   });
+  state.routeState[state.routeId] = { x: route.start.x, y: route.start.y, initialized: true };
 
   state.combatLocked = false;
   setCombatTurn("player");
@@ -532,10 +573,25 @@ function resetRun(customMessage) {
 }
 
 function switchRoute(routeId, customMessage) {
+  if (state.activeEncounter) return;
+
+  state.routeState[state.routeId] = { x: player.x, y: player.y, initialized: true };
   state.routeId = routeId;
   state.route = ROUTES[routeId];
   routeSelect.value = routeId;
-  resetRun(customMessage || `Entraste en ${state.route.label}.`);
+  const saved = state.routeState[routeId];
+  const spawn = saved && saved.initialized ? saved : state.route.start;
+  player.x = spawn.x;
+  player.y = spawn.y;
+  player.won = false;
+  state.activeEncounter = null;
+  state.combatLocked = false;
+  setCombatTurn("player");
+  setCombatControlsEnabled(true);
+  setCombatModalOpen(false);
+  messageElement.textContent = customMessage || `Entraste en ${state.route.label}.`;
+  updateStatsPanel();
+  updateStatus();
 }
 
 function canMove(nextX, nextY) {
@@ -552,6 +608,7 @@ function getMilestoneAt(x, y) {
 function updateStatus() {
   const completed = state.route.milestones.filter((milestone) => milestone.completed).length;
   statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | Nivel: ${player.level} | Items: ${getTotalItems()} | Esencia: ${state.summonEssence}`;
+  updateProgressPanel();
 }
 
 function updateCombatStats() {
@@ -666,6 +723,7 @@ function move(dx, dy) {
 
   player.x = nextX;
   player.y = nextY;
+  state.routeState[state.routeId] = { x: player.x, y: player.y, initialized: true };
 
   const milestone = getMilestoneAt(player.x, player.y);
   if (milestone && !milestone.completed) {
@@ -746,6 +804,32 @@ async function useItemById(itemId) {
     logCombatEvent("Bomba lanzada.");
     await applyDamageToEnemy(9, "Bomba");
   }
+}
+
+async function attemptEscape() {
+  if (!state.activeEncounter) return;
+
+  const enemyRace = state.activeEncounter.milestone.race || "humano";
+  const escapeChance = getRaceMeta(enemyRace).dominateAll ? 0.25 : 0.6;
+  const escaped = Math.random() < escapeChance;
+
+  if (escaped) {
+    const start = state.route.start;
+    player.x = start.x;
+    player.y = start.y;
+    state.routeState[state.routeId] = { x: start.x, y: start.y, initialized: true };
+    const enemy = state.activeEncounter.milestone.enemy;
+    state.activeEncounter = null;
+    setCombatModalOpen(false);
+    messageElement.textContent = `Escapaste del combate contra ${enemy}.`;
+    logCombatEvent(`Escape exitoso (${Math.round(escapeChance * 100)}%).`);
+    updateStatus();
+    return;
+  }
+
+  battleLogElement.textContent = "Intento de escape fallido. El enemigo contraataca.";
+  logCombatEvent(`Escape fallido (${Math.round(escapeChance * 100)}%).`);
+  await enemyTurn();
 }
 
 function dropItemById(itemId) {
@@ -856,6 +940,12 @@ healButton.addEventListener("click", async () => {
   });
 });
 
+escapeButton.addEventListener("click", async () => {
+  await runPlayerAction(async () => {
+    await attemptEscape();
+  });
+});
+
 inventoryListElement.addEventListener("click", async (event) => {
   const target = event.target;
   if (!(target instanceof HTMLButtonElement)) return;
@@ -930,6 +1020,11 @@ document.querySelectorAll("button[data-dir]").forEach((button) => {
 });
 
 routeSelect.addEventListener("change", () => {
+  if (state.activeEncounter) {
+    routeSelect.value = state.routeId;
+    messageElement.textContent = "No puedes cambiar de ruta en combate.";
+    return;
+  }
   switchRoute(routeSelect.value);
 });
 

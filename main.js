@@ -29,6 +29,7 @@ const ITEM_DEFS = {
 };
 
 const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
+const ROUTE_ORDER = ["route1", "route2"];
 const COMBAT_SCENE_ASSET = "assets/combat/arena.svg";
 const ENEMY_ASSETS = {
   "Lobo Sombrio": "assets/enemies/lobo-sombrio.svg",
@@ -78,21 +79,21 @@ const ROUTES = {
     start: { x: 1, y: 9 },
     map: [
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-      [1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 1],
-      [1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1],
-      [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1],
-      [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 1],
+      [1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1],
+      [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+      [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1],
       [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-      [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
-      [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
-      [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
-      [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+      [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+      [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ],
     milestones: [
       { id: "r2m1", x: 3, y: 9, enemy: "Bruja del Pantano", hp: 13, completed: false },
-      { id: "r2m2", x: 7, y: 6, enemy: "Caballero Perdido", hp: 15, completed: false },
-      { id: "r2m3", x: 11, y: 5, enemy: "Bestia de Ceniza", hp: 17, completed: false },
+      { id: "r2m2", x: 7, y: 9, enemy: "Caballero Perdido", hp: 15, completed: false },
+      { id: "r2m3", x: 11, y: 7, enemy: "Bestia de Ceniza", hp: 17, completed: false },
       { id: "r2m4", x: 15, y: 3, enemy: "Arquero del Eclipse", hp: 18, completed: false },
       { id: "r2m5", x: 17, y: 1, enemy: "Dragon Menor", hp: 20, completed: false },
     ],
@@ -124,6 +125,12 @@ const state = {
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
+}
+
+function getNextRouteId(routeId) {
+  const idx = ROUTE_ORDER.indexOf(routeId);
+  if (idx === -1) return null;
+  return ROUTE_ORDER[idx + 1] || null;
 }
 
 function getPartyBonus() {
@@ -323,10 +330,11 @@ function resetRun(customMessage) {
   updateStatus();
 }
 
-function switchRoute(routeId) {
+function switchRoute(routeId, customMessage) {
   state.routeId = routeId;
   state.route = ROUTES[routeId];
-  resetRun(`Entraste en ${state.route.label}.`);
+  routeSelect.value = routeId;
+  resetRun(customMessage || `Entraste en ${state.route.label}.`);
 }
 
 function canMove(nextX, nextY) {
@@ -410,6 +418,14 @@ function tryFinishMap() {
   const completedAll = state.route.milestones.every((milestone) => milestone.completed);
 
   if (completedAll) {
+    const nextRouteId = getNextRouteId(state.routeId);
+    if (nextRouteId) {
+      const currentLabel = state.route.label;
+      const nextLabel = ROUTES[nextRouteId].label;
+      switchRoute(nextRouteId, `${currentLabel} completada. Pasas automaticamente a ${nextLabel}.`);
+      return;
+    }
+
     player.won = true;
     messageElement.textContent = `Victoria total en ${state.route.label}.`;
     return;

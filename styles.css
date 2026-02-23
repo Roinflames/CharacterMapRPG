@@ -103,6 +103,7 @@ body {
 .meta-grid {
   display: grid;
   gap: 1rem;
+  align-items: start;
 }
 
 .character-card h2,
@@ -240,6 +241,9 @@ canvas {
   display: grid;
   place-items: center;
   gap: 0.6rem;
+  justify-self: center;
+  width: fit-content;
+  min-width: 220px;
 }
 
 .controls div {

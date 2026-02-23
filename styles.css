@@ -214,6 +214,9 @@ canvas {
 }
 
 .encounter-modal {
+  --encounter-race-color: #8de0ff;
+  --encounter-faction-glow: rgba(116, 214, 255, 0.42);
+  --race-frame-speed: 4.2s;
   position: fixed;
   top: 50%;
   left: 50%;
@@ -226,6 +229,26 @@ canvas {
   background:
     linear-gradient(180deg, rgba(8, 26, 39, 0.96), rgba(12, 41, 59, 0.93));
   font-family: "Trebuchet MS", "Verdana", sans-serif;
+  overflow: hidden;
+}
+
+.encounter-modal::before {
+  content: "";
+  position: absolute;
+  inset: -24%;
+  background:
+    radial-gradient(circle at 20% 18%, var(--encounter-faction-glow), transparent 45%),
+    radial-gradient(circle at 78% 78%, color-mix(in srgb, var(--encounter-race-color) 30%, transparent), transparent 58%);
+  opacity: 0.85;
+  filter: blur(18px);
+  z-index: 0;
+  pointer-events: none;
+  animation: factionAurora 5.8s ease-in-out infinite alternate;
+}
+
+.encounter-modal > * {
+  position: relative;
+  z-index: 1;
 }
 
 .combat-backdrop {
@@ -278,6 +301,22 @@ canvas {
   position: relative;
   overflow: hidden;
   border-radius: 6px;
+  border: 2px solid color-mix(in srgb, var(--encounter-race-color) 70%, #ffffff 30%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 18px color-mix(in srgb, var(--encounter-race-color) 34%, transparent);
+}
+
+.enemy-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  border: 2px solid color-mix(in srgb, var(--encounter-race-color) 90%, #ffffff 10%);
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 6;
+  animation: raceFramePulse var(--race-frame-speed) ease-in-out infinite;
 }
 
 .enemy-frame::after {
@@ -507,6 +546,14 @@ button:disabled {
   filter: saturate(1.2) contrast(1.1) hue-rotate(10deg);
 }
 
+.encounter-modal[data-race="humano"] { --race-frame-speed: 4.6s; }
+.encounter-modal[data-race="elfo"] { --race-frame-speed: 3.8s; }
+.encounter-modal[data-race="enano"] { --race-frame-speed: 5s; }
+.encounter-modal[data-race="orco"] { --race-frame-speed: 3.4s; }
+.encounter-modal[data-race="draconico"] { --race-frame-speed: 3s; }
+.encounter-modal[data-race="umbrio"] { --race-frame-speed: 2.6s; }
+.encounter-modal[data-race="celestial"] { --race-frame-speed: 4s; }
+
 button:active {
   transform: scale(0.98);
 }
@@ -595,6 +642,27 @@ button:active {
   100% { opacity: 0; transform: translateY(-24px) scale(0.95); }
 }
 
+@keyframes factionAurora {
+  0% { transform: translate(-8px, -6px) scale(1); opacity: 0.75; }
+  50% { transform: translate(4px, 3px) scale(1.03); opacity: 0.95; }
+  100% { transform: translate(9px, 7px) scale(1.01); opacity: 0.78; }
+}
+
+@keyframes raceFramePulse {
+  0% {
+    opacity: 0.34;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--encounter-race-color) 40%, transparent);
+  }
+  50% {
+    opacity: 0.88;
+    box-shadow: 0 0 22px color-mix(in srgb, var(--encounter-race-color) 74%, transparent);
+  }
+  100% {
+    opacity: 0.34;
+    box-shadow: 0 0 8px color-mix(in srgb, var(--encounter-race-color) 40%, transparent);
+  }
+}
+
 @keyframes sceneDrift {
   0% { transform: translate(0, 0) scale(1.06); }
   50% { transform: translate(-6px, 2px) scale(1.07); }
@@ -602,6 +670,8 @@ button:active {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .encounter-modal::before,
+  .enemy-frame::before,
   .scene-front {
     animation: none;
   }

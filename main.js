@@ -193,7 +193,13 @@ const state = {
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
-  if (!isOpen) resetSceneParallax();
+  if (!isOpen) {
+    resetSceneParallax();
+    encounterPanel.removeAttribute("data-faction");
+    encounterPanel.removeAttribute("data-race");
+    encounterPanel.style.removeProperty("--encounter-race-color");
+    encounterPanel.style.removeProperty("--encounter-faction-glow");
+  }
 }
 
 function resetSceneParallax() {
@@ -244,6 +250,13 @@ function getEnemyAssetWithFallback(enemyName) {
 function getRaceBadgeHTML(raceKey) {
   const race = getRaceMeta(raceKey);
   return `<span class="race-badge" style="--race-color:${race.color}">${race.label}</span>`;
+}
+
+function applyEncounterVisualTheme(raceKey) {
+  const raceMeta = getRaceMeta(raceKey);
+  const factionGlow = raceMeta.faction === "infierno" ? "rgba(255, 104, 104, 0.45)" : "rgba(116, 214, 255, 0.42)";
+  encounterPanel.style.setProperty("--encounter-race-color", raceMeta.color);
+  encounterPanel.style.setProperty("--encounter-faction-glow", factionGlow);
 }
 
 function getActiveSummon() {
@@ -792,6 +805,7 @@ function startEncounter(milestone) {
   const factionLabel = getFactionLabel(milestone.race || "humano");
   encounterPanel.dataset.faction = raceMeta.faction || "cielo";
   encounterPanel.dataset.race = milestone.race || "humano";
+  applyEncounterVisualTheme(milestone.race || "humano");
   enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style} | ${factionLabel})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
   updateStoryLine(`Combate activo: ${milestone.enemy} representa al ${factionLabel}.`);

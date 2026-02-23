@@ -662,6 +662,11 @@ function wait(ms) {
   });
 }
 
+function syncDocumentTitleWithVersion() {
+  const versionLabel = document.querySelector(".version")?.textContent?.trim() || "UI v0.0.0";
+  document.title = `Character Map RPG | ${versionLabel}`;
+}
+
 async function playTemporaryClass(element, className, ms) {
   element.classList.add(className);
   await wait(ms);
@@ -1169,6 +1174,9 @@ async function enemyTurn() {
   if (player.hp <= 0) {
     battleLogElement.textContent = `Recibiste ${reducedDamage}. Has caido.`;
     logCombatEvent(`Derrota: recibes ${reducedDamage} de dano.`);
+    setCombatControlsEnabled(false);
+    await playTemporaryClass(encounterPanel, "defeat-anim", 760);
+    await wait(120);
     resetRun(`Derrota en ${state.route.label}.`);
     return;
   }
@@ -1680,4 +1688,5 @@ renderSummons();
 renderEquipment();
 renderCombatHistory();
 switchRoute(routeSelect.value);
+syncDocumentTitleWithVersion();
 render();

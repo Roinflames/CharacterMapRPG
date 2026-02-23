@@ -653,6 +653,10 @@ button:active {
   animation: playerHitShake 300ms ease;
 }
 
+.defeat-anim {
+  animation: defeatFall 760ms ease both;
+}
+
 .float-text {
   position: absolute;
   top: 16px;
@@ -712,6 +716,24 @@ button:active {
   50% { transform: translate(calc(-50% + 6px), -50%); }
   75% { transform: translate(calc(-50% - 3px), -50%); }
   100% { transform: translate(-50%, -50%); }
+}
+
+@keyframes defeatFall {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    filter: saturate(1) brightness(1);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, calc(-50% + 8px)) scale(0.99);
+    filter: saturate(0.75) brightness(0.82);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate(-50%, calc(-50% + 24px)) scale(0.96);
+    filter: saturate(0.45) brightness(0.58);
+    opacity: 0.2;
+  }
 }
 
 @keyframes floatPop {
@@ -776,6 +798,7 @@ button:active {
   .enemy-frame::before,
   .enemy-depth-layer,
   .enemy-breath-layer,
+  .defeat-anim,
   .scene-front {
     animation: none;
   }

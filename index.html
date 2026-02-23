@@ -20,7 +20,7 @@
         </div>
         <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
-        <p class="version">UI v0.9.0</p>
+        <p class="version">UI v0.11.0</p>
       </section>
 
       <section class="tablet-layout" aria-label="Vista principal">
@@ -62,17 +62,50 @@
               <li class="inventory-empty">Sin items todavia.</li>
             </ul>
           </section>
+
+          <section class="inventory" aria-label="Invocaciones">
+            <h2>Invocaciones</h2>
+            <p id="summon-essence" class="inventory-help">Esencia de invocacion: 0</p>
+            <ul id="summon-list" class="inventory-list">
+              <li class="inventory-empty">Sin invocaciones.</li>
+            </ul>
+          </section>
+
+          <section class="inventory" aria-label="Historial de combate">
+            <h2>Historial de Combate</h2>
+            <ul id="combat-history" class="history-list">
+              <li class="inventory-empty">Sin eventos aun.</li>
+            </ul>
+          </section>
         </div>
       </section>
 
       <div id="combat-backdrop" class="combat-backdrop hidden"></div>
       <section id="encounter-panel" class="encounter encounter-modal hidden" aria-live="polite">
         <img id="combat-scene-image" class="combat-scene-image" src="assets/combat/arena.svg" alt="Escenario de combate" />
-        <img id="enemy-image" class="enemy-image" alt="Retrato del enemigo" />
+        <div class="enemy-frame">
+          <img id="enemy-image" class="enemy-image" alt="Retrato del enemigo" />
+          <span id="enemy-float-text" class="float-text hidden"></span>
+        </div>
         <h2 id="enemy-name">Enfrentamiento</h2>
+        <div class="hp-bars">
+          <div class="hp-row">
+            <span>Jugador</span>
+            <div class="hp-track">
+              <div id="player-hp-fill" class="hp-fill player"></div>
+            </div>
+          </div>
+          <div class="hp-row">
+            <span>Enemigo</span>
+            <div class="hp-track">
+              <div id="enemy-hp-fill" class="hp-fill enemy"></div>
+            </div>
+          </div>
+        </div>
         <p id="combat-stats">HP jugador: 20 | HP enemigo: 0</p>
         <p id="turn-indicator" class="turn-indicator">Turno: Jugador</p>
         <p id="battle-log">Explora el mapa para iniciar un combate.</p>
+        <span id="player-float-text" class="float-text player-float hidden"></span>
         <div class="encounter-actions">
           <button id="attack-btn" type="button">Atacar</button>
           <button id="heal-btn" type="button">Curar</button>

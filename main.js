@@ -8,6 +8,9 @@ const characterStatsElement = document.getElementById("character-stats");
 const characterBonusElement = document.getElementById("character-bonus");
 const partyListElement = document.getElementById("party-list");
 const recruitListElement = document.getElementById("recruit-list");
+const summonEssenceElement = document.getElementById("summon-essence");
+const summonListElement = document.getElementById("summon-list");
+const combatHistoryElement = document.getElementById("combat-history");
 const combatBackdrop = document.getElementById("combat-backdrop");
 const combatSceneImageElement = document.getElementById("combat-scene-image");
 const encounterPanel = document.getElementById("encounter-panel");
@@ -44,11 +47,30 @@ const ENEMY_ASSETS = {
   "Dragon Menor": "assets/enemies/dragon-menor.svg",
 };
 
+const RACES = {
+  humano: { label: "Humano", color: "#f59e0b", style: "fisico" },
+  elfo: { label: "Elfo", color: "#10b981", style: "magico" },
+  enano: { label: "Enano", color: "#ef4444", style: "fisico" },
+  orco: { label: "Orco", color: "#84cc16", style: "fisico" },
+  draconico: { label: "Draconico", color: "#f97316", style: "magico" },
+  umbrio: { label: "Umbrio", color: "#a855f7", style: "magico", dominateAll: true, hardToOccupy: true },
+  celestial: { label: "Celestial", color: "#22d3ee", style: "magico" },
+};
+
 const COMPANIONS = [
-  { id: "tank", name: "Bran Escudo", atk: 1, def: 1, hp: 4 },
-  { id: "rogue", name: "Lyra Veloz", atk: 2, def: 0, hp: 0 },
-  { id: "sage", name: "Nora Savia", atk: 0, def: 1, hp: 3 },
-  { id: "hunter", name: "Kael Cazador", atk: 1, def: 0, hp: 2 },
+  { id: "tank", name: "Bran Escudo", atk: 1, def: 1, hp: 4, race: "humano" },
+  { id: "rogue", name: "Lyra Veloz", atk: 2, def: 0, hp: 0, race: "elfo" },
+  { id: "sage", name: "Nora Savia", atk: 0, def: 1, hp: 3, race: "celestial" },
+  { id: "hunter", name: "Kael Cazador", atk: 1, def: 0, hp: 2, race: "enano" },
+  { id: "warlord", name: "Gorn Filo", atk: 2, def: 1, hp: 1, race: "orco" },
+  { id: "flame", name: "Syr Vahn", atk: 1, def: 0, hp: 3, race: "draconico" },
+  { id: "shade", name: "Mira Noctis", atk: 1, def: 1, hp: 1, race: "umbrio" },
+];
+
+const SUMMONS = [
+  { id: "phoenix", name: "Fenix Rojo", race: "draconico", atk: 2, def: 0, hp: 2, level: 1 },
+  { id: "warden", name: "Centinela Verde", race: "elfo", atk: 1, def: 2, hp: 1, level: 1 },
+  { id: "golem", name: "Golem Escarlata", race: "enano", atk: 1, def: 2, hp: 2, level: 1 },
 ];
 
 const ROUTES = {
@@ -69,10 +91,10 @@ const ROUTES = {
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ],
     milestones: [
-      { id: "r1m1", x: 4, y: 1, enemy: "Lobo Sombrio", hp: 12, completed: false },
-      { id: "r1m2", x: 8, y: 5, enemy: "Bandido del Valle", hp: 14, completed: false },
-      { id: "r1m3", x: 13, y: 7, enemy: "Guardian de Piedra", hp: 16, completed: false },
-      { id: "r1m4", x: 17, y: 9, enemy: "Capitan del Portal", hp: 18, completed: false },
+      { id: "r1m1", x: 4, y: 1, enemy: "Lobo Sombrio", race: "umbrio", hp: 12, completed: false },
+      { id: "r1m2", x: 8, y: 5, enemy: "Bandido del Valle", race: "humano", hp: 14, completed: false },
+      { id: "r1m3", x: 13, y: 7, enemy: "Guardian de Piedra", race: "enano", hp: 16, completed: false },
+      { id: "r1m4", x: 17, y: 9, enemy: "Capitan del Portal", race: "celestial", hp: 18, completed: false },
     ],
   },
   route2: {
@@ -92,11 +114,11 @@ const ROUTES = {
       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
     ],
     milestones: [
-      { id: "r2m1", x: 3, y: 9, enemy: "Bruja del Pantano", hp: 13, completed: false },
-      { id: "r2m2", x: 7, y: 9, enemy: "Caballero Perdido", hp: 15, completed: false },
-      { id: "r2m3", x: 11, y: 7, enemy: "Bestia de Ceniza", hp: 17, completed: false },
-      { id: "r2m4", x: 15, y: 3, enemy: "Arquero del Eclipse", hp: 18, completed: false },
-      { id: "r2m5", x: 17, y: 1, enemy: "Dragon Menor", hp: 20, completed: false },
+      { id: "r2m1", x: 3, y: 9, enemy: "Bruja del Pantano", race: "draconico", hp: 13, completed: false },
+      { id: "r2m2", x: 7, y: 9, enemy: "Caballero Perdido", race: "humano", hp: 15, completed: false },
+      { id: "r2m3", x: 11, y: 7, enemy: "Bestia de Ceniza", race: "orco", hp: 17, completed: false },
+      { id: "r2m4", x: 15, y: 3, enemy: "Arquero del Eclipse", race: "elfo", hp: 18, completed: false },
+      { id: "r2m5", x: 17, y: 1, enemy: "Dragon Menor", race: "umbrio", hp: 20, completed: false },
     ],
   },
 };
@@ -121,6 +143,10 @@ const state = {
   inventory: [],
   nextItemId: 1,
   party: [],
+  summons: SUMMONS.map((summon) => ({ ...summon })),
+  activeSummonId: "phoenix",
+  summonEssence: 0,
+  combatHistory: [],
   combatTurn: "player",
   combatLocked: false,
 };
@@ -128,6 +154,45 @@ const state = {
 function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
+}
+
+function getRaceMeta(raceKey) {
+  return RACES[raceKey] || RACES.humano;
+}
+
+function getRaceBadgeHTML(raceKey) {
+  const race = getRaceMeta(raceKey);
+  return `<span class="race-badge" style="--race-color:${race.color}">${race.label}</span>`;
+}
+
+function getActiveSummon() {
+  return state.summons.find((summon) => summon.id === state.activeSummonId) || null;
+}
+
+function getSummonBonus() {
+  const summon = getActiveSummon();
+  if (!summon) return { atk: 0, def: 0, hp: 0 };
+  const scale = Math.max(1, summon.level);
+  return {
+    atk: summon.atk + (scale - 1),
+    def: summon.def + Math.floor((scale - 1) / 2),
+    hp: summon.hp + (scale - 1),
+  };
+}
+
+function logCombatEvent(message) {
+  state.combatHistory.unshift(message);
+  state.combatHistory = state.combatHistory.slice(0, 12);
+  renderCombatHistory();
+}
+
+function renderCombatHistory() {
+  if (!combatHistoryElement) return;
+  if (state.combatHistory.length === 0) {
+    combatHistoryElement.innerHTML = '<li class="inventory-empty">Sin eventos aun.</li>';
+    return;
+  }
+  combatHistoryElement.innerHTML = state.combatHistory.map((event) => `<li>${event}</li>`).join("");
 }
 
 function setCombatControlsEnabled(enabled) {
@@ -187,7 +252,7 @@ function getPartyBonus() {
 }
 
 function getMaxHp() {
-  return player.baseMaxHp + getPartyBonus().hp;
+  return player.baseMaxHp + getPartyBonus().hp + getSummonBonus().hp;
 }
 
 function getTotalItems() {
@@ -195,11 +260,31 @@ function getTotalItems() {
 }
 
 function getPlayerAtk() {
-  return player.baseAtk + getPartyBonus().atk;
+  return player.baseAtk + getPartyBonus().atk + getSummonBonus().atk;
 }
 
 function getPlayerDef() {
-  return player.baseDef + getPartyBonus().def;
+  return player.baseDef + getPartyBonus().def + getSummonBonus().def;
+}
+
+function getPlayerRaceKey() {
+  const summon = getActiveSummon();
+  if (summon) return summon.race;
+  if (state.party.length > 0) return state.party[0].race;
+  return "humano";
+}
+
+function getRaceDamageMultiplier(attackerRaceKey, defenderRaceKey) {
+  const attacker = getRaceMeta(attackerRaceKey);
+  const defender = getRaceMeta(defenderRaceKey);
+  let multiplier = 1;
+
+  if (attacker.dominateAll) multiplier *= 1.22;
+  if (defender.dominateAll) multiplier *= 0.82;
+  if (attacker.style === "fisico" && defender.style === "magico") multiplier *= 1.08;
+  if (attacker.style === "magico" && defender.style === "fisico") multiplier *= 1.08;
+
+  return multiplier;
 }
 
 function findItem(type) {
@@ -265,7 +350,7 @@ function renderParty() {
       .map(
         (member) => `
           <li>
-            <span>${member.name} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
+            <span>${member.name} ${getRaceBadgeHTML(member.race)} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
             <div class="party-actions">
               <button data-party-action="remove" data-member-id="${member.id}" type="button">Quitar</button>
             </div>
@@ -283,7 +368,7 @@ function renderParty() {
       .map(
         (member) => `
           <li>
-            <span>${member.name} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
+            <span>${member.name} ${getRaceBadgeHTML(member.race)} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
             <div class="party-actions">
               <button data-party-action="add" data-member-id="${member.id}" type="button">Reclutar</button>
             </div>
@@ -297,6 +382,70 @@ function renderParty() {
   if (player.hp > maxHp) player.hp = maxHp;
   updateStatsPanel();
   updateStatus();
+}
+
+function renderSummons() {
+  summonEssenceElement.textContent = `Esencia de invocacion: ${state.summonEssence}`;
+
+  if (state.summons.length === 0) {
+    summonListElement.innerHTML = '<li class="inventory-empty">Sin invocaciones.</li>';
+    return;
+  }
+
+  summonListElement.innerHTML = state.summons
+    .map((summon) => {
+      const isActive = summon.id === state.activeSummonId;
+      return `
+        <li class="inventory-item">
+          <div>
+            <strong>${summon.name}</strong> ${getRaceBadgeHTML(summon.race)}
+            <p>Nivel ${summon.level} (+${summon.atk + summon.level - 1} ATQ, +${summon.def + Math.floor((summon.level - 1) / 2)} DEF, +${summon.hp + summon.level - 1} HP)</p>
+          </div>
+          <div class="inventory-actions">
+            <button class="secondary-btn" data-summon-action="activate" data-summon-id="${summon.id}" type="button">${isActive ? "Activa" : "Invocar"}</button>
+            <button class="secondary-btn" data-summon-action="train" data-summon-id="${summon.id}" type="button">Entrenar</button>
+          </div>
+        </li>
+      `;
+    })
+    .join("");
+}
+
+function activateSummon(summonId) {
+  if (!state.summons.some((summon) => summon.id === summonId)) return;
+  state.activeSummonId = summonId;
+  const summon = getActiveSummon();
+  messageElement.textContent = `Invocacion activa: ${summon.name}.`;
+  logCombatEvent(`Invocacion activa: ${summon.name}.`);
+  updateStatsPanel();
+  updateCombatStats();
+  updateStatus();
+  renderSummons();
+}
+
+function trainSummon(summonId) {
+  if (state.activeEncounter) {
+    messageElement.textContent = "Entrena invocaciones fuera de combate.";
+    return;
+  }
+
+  const summon = state.summons.find((entry) => entry.id === summonId);
+  if (!summon) return;
+
+  const cost = summon.level;
+  if (state.summonEssence < cost) {
+    messageElement.textContent = `Falta esencia para entrenar (${cost}).`;
+    return;
+  }
+
+  state.summonEssence -= cost;
+  summon.level += 1;
+  messageElement.textContent = `${summon.name} sube a nivel ${summon.level}.`;
+  logCombatEvent(`Entrenamiento: ${summon.name} alcanza nivel ${summon.level}.`);
+  updateStatsPanel();
+  updateCombatStats();
+  updateStatus();
+  renderSummons();
 }
 
 function updateStatsPanel() {
@@ -316,8 +465,16 @@ function addPartyMember(memberId) {
   if (!candidate) return;
   if (state.party.some((member) => member.id === candidate.id)) return;
 
+  const raceMeta = getRaceMeta(candidate.race);
+  if (raceMeta.hardToOccupy && Math.random() > 0.35) {
+    messageElement.textContent = `${candidate.name} (${raceMeta.label}) resiste la ocupacion. Intenta de nuevo.`;
+    logCombatEvent(`Reclutamiento fallido: ${candidate.name} (${raceMeta.label}).`);
+    return;
+  }
+
   state.party.push(candidate);
   messageElement.textContent = `${candidate.name} se unio al equipo.`;
+  logCombatEvent(`Reclutado: ${candidate.name}.`);
   renderParty();
 }
 
@@ -394,7 +551,7 @@ function getMilestoneAt(x, y) {
 
 function updateStatus() {
   const completed = state.route.milestones.filter((milestone) => milestone.completed).length;
-  statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | Nivel: ${player.level} | Items: ${getTotalItems()}`;
+  statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | Nivel: ${player.level} | Items: ${getTotalItems()} | Esencia: ${state.summonEssence}`;
 }
 
 function updateCombatStats() {
@@ -419,7 +576,10 @@ function endEncounterWithVictory() {
   setCombatModalOpen(false);
 
   const lootName = rollLoot();
+  state.summonEssence += 1;
   gainExp(earnedExp);
+  renderSummons();
+  logCombatEvent(`Victoria sobre ${milestone.enemy}: +${earnedExp} EXP, +1 esencia.`);
   messageElement.textContent = `Hito superado: ${milestone.enemy}. +${earnedExp} EXP, loot: ${lootName}.`;
   updateStatus();
 }
@@ -430,18 +590,23 @@ async function enemyTurn() {
   setCombatTurn("enemy");
   await playTemporaryClass(combatSceneImageElement, "enemy-turn-anim", 280);
 
-  const rawDamage = Math.floor(Math.random() * 4) + 2;
+  const enemyRace = state.activeEncounter.milestone.race || "humano";
+  const playerRace = getPlayerRaceKey();
+  const raceMult = getRaceDamageMultiplier(enemyRace, playerRace);
+  const rawDamage = Math.round((Math.floor(Math.random() * 4) + 2) * raceMult);
   const reducedDamage = Math.max(1, rawDamage - getPlayerDef());
   await playTemporaryClass(encounterPanel, "player-hit-anim", 300);
   player.hp = Math.max(0, player.hp - reducedDamage);
 
   if (player.hp <= 0) {
     battleLogElement.textContent = `Recibiste ${reducedDamage}. Has caido.`;
+    logCombatEvent(`Derrota: recibes ${reducedDamage} de dano.`);
     resetRun(`Derrota en ${state.route.label}.`);
     return;
   }
 
-  battleLogElement.textContent = `El enemigo contraataca y hace ${reducedDamage} de dano.`;
+  battleLogElement.textContent = `El enemigo contraataca y hace ${reducedDamage} de dano (${getRaceMeta(enemyRace).style}).`;
+  logCombatEvent(`Enemigo golpea por ${reducedDamage} (${getRaceMeta(enemyRace).label}).`);
   updateCombatStats();
   updateStatsPanel();
   updateStatus();
@@ -461,8 +626,10 @@ function startEncounter(milestone) {
   setCombatModalOpen(true);
   setCombatTurn("player");
   setCombatControlsEnabled(true);
-  enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;
+  const raceMeta = getRaceMeta(milestone.race || "humano");
+  enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
+  logCombatEvent(`Inicia combate contra ${milestone.enemy}.`);
   updateCombatStats();
 }
 
@@ -514,15 +681,21 @@ async function applyDamageToEnemy(damage, label) {
 
   await playTemporaryClass(encounterPanel, "player-attack-anim", 260);
   await playTemporaryClass(enemyImageElement, "enemy-hit-anim", 300);
-  state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - damage);
+  const playerRace = getPlayerRaceKey();
+  const enemyRace = state.activeEncounter.milestone.race || "humano";
+  const raceMult = getRaceDamageMultiplier(playerRace, enemyRace);
+  const finalDamage = Math.max(1, Math.round(damage * raceMult));
+  state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - finalDamage);
 
   if (state.activeEncounter.hp <= 0) {
-    battleLogElement.textContent = `${label} hace ${damage}. Enemigo derrotado.`;
+    battleLogElement.textContent = `${label} hace ${finalDamage}. Enemigo derrotado.`;
+    logCombatEvent(`${label}: ${finalDamage} de dano final (${getRaceMeta(playerRace).label}).`);
     endEncounterWithVictory();
     return;
   }
 
-  battleLogElement.textContent = `${label} hace ${damage}. El enemigo sigue en pie.`;
+  battleLogElement.textContent = `${label} hace ${finalDamage}. El enemigo sigue en pie.`;
+  logCombatEvent(`${label}: ${finalDamage} de dano (${getRaceMeta(playerRace).label}).`);
   updateCombatStats();
   await enemyTurn();
 }
@@ -538,6 +711,7 @@ async function useItemById(itemId) {
     messageElement.textContent = `Usaste Pocion (+${heal} HP).`;
     if (state.activeEncounter) {
       battleLogElement.textContent = `Usaste Pocion y recuperaste ${heal} HP.`;
+      logCombatEvent(`Pocion: +${heal} HP.`);
       updateCombatStats();
       await enemyTurn();
     }
@@ -553,6 +727,7 @@ async function useItemById(itemId) {
     messageElement.textContent = "Usaste Elixir (+2 HP base, +5 HP).";
     if (state.activeEncounter) {
       battleLogElement.textContent = "Elixir activado. El enemigo toma su turno.";
+      logCombatEvent("Elixir activado.");
       updateCombatStats();
       await enemyTurn();
     }
@@ -568,6 +743,7 @@ async function useItemById(itemId) {
     }
 
     removeItem(itemId, 1);
+    logCombatEvent("Bomba lanzada.");
     await applyDamageToEnemy(9, "Bomba");
   }
 }
@@ -672,6 +848,7 @@ healButton.addEventListener("click", async () => {
     const heal = Math.floor(Math.random() * 4) + 3;
     player.hp = Math.min(getMaxHp(), player.hp + heal);
     battleLogElement.textContent = `Te curas ${heal} puntos.`;
+    logCombatEvent(`Curacion de turno: +${heal}.`);
     updateCombatStats();
     updateStatsPanel();
     updateStatus();
@@ -721,6 +898,16 @@ recruitListElement.addEventListener("click", (event) => {
   if (action === "add") addPartyMember(memberId);
 });
 
+summonListElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+  const action = target.getAttribute("data-summon-action");
+  const summonId = target.getAttribute("data-summon-id");
+  if (!summonId) return;
+  if (action === "activate") activateSummon(summonId);
+  if (action === "train") trainSummon(summonId);
+});
+
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
 
@@ -750,5 +937,7 @@ setCombatTurn("player");
 setCombatControlsEnabled(true);
 renderInventory();
 renderParty();
+renderSummons();
+renderCombatHistory();
 switchRoute(routeSelect.value);
 render();

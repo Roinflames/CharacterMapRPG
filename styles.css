@@ -22,10 +22,12 @@ body {
   display: grid;
   place-items: center;
   padding: 1rem;
+  overflow-x: auto;
 }
 
 .layout {
-  width: min(960px, 100%);
+  width: min(1200px, 100%);
+  min-width: 980px;
   display: grid;
   gap: 1rem;
 }
@@ -83,6 +85,19 @@ body {
   margin-top: 0.5rem;
   color: var(--accent);
   font-weight: 700;
+}
+
+.tablet-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+  gap: 1rem;
+}
+
+.left-column,
+.right-column {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
 }
 
 .meta-grid {
@@ -179,6 +194,11 @@ canvas {
 }
 
 .controls {
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 0.8rem;
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   gap: 0.6rem;
@@ -219,7 +239,7 @@ button:active {
   transform: scale(0.98);
 }
 
-@media (min-width: 860px) {
+@media (min-width: 1100px) {
   .meta-grid {
     grid-template-columns: 1fr 1fr;
   }

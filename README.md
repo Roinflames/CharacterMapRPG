@@ -1,4 +1,4 @@
-# Character Map (UI v0.21.1)
+# Character Map (UI v0.22.0)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,7 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.22.0`: limpieza automatica de fondos claros en retratos enemigos (chroma key + cache en runtime) para mejorar la presencia visual en combate.
 - `v0.21.1`: parallax del combate ampliado al cuadro completo del modal (incluye zona de botones) con desplazamiento limitado para mejor control.
 - `v0.21.0`: retratos enemigos con capa de profundidad/silueta y efectos visuales diferenciados para estilos fisico y magico.
 - `v0.20.0`: iluminacion dinamica del modal por faccion y marco animado por raza para reforzar identidad visual de cada enemigo.

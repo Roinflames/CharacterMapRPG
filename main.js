@@ -66,6 +66,8 @@ const ARMORS = [
 const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
 const ROUTE_ORDER = ["route1", "route2"];
 const COMBAT_SCENE_ASSET = "assets/combat/arena.svg";
+const processedEnemyAssetCache = new Map();
+let activeEncounterVisualToken = 0;
 const ENEMY_ASSETS = {
   "Lobo Sombrio": "assets/enemies/lobo-sombrio.webp",
   "Bandido del Valle": "assets/enemies/bandido-del-valle.webp",
@@ -193,6 +195,7 @@ function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
   if (!isOpen) {
+    activeEncounterVisualToken += 1;
     resetSceneParallax();
     encounterPanel.removeAttribute("data-faction");
     encounterPanel.removeAttribute("data-race");
@@ -248,6 +251,63 @@ function getEnemyAssetWithFallback(enemyName) {
   }
   const fallback = primary.replace(/\.webp$/i, ".svg");
   return { primary, fallback };
+}
+
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`No se pudo cargar imagen: ${src}`));
+    img.src = src;
+  });
+}
+
+async function buildProcessedEnemyAsset(src) {
+  const image = await loadImage(src);
+  const canvasEl = document.createElement("canvas");
+  canvasEl.width = image.naturalWidth;
+  canvasEl.height = image.naturalHeight;
+  const ctx2d = canvasEl.getContext("2d");
+  if (!ctx2d) return src;
+
+  ctx2d.drawImage(image, 0, 0);
+  const frame = ctx2d.getImageData(0, 0, canvasEl.width, canvasEl.height);
+  const px = frame.data;
+
+  for (let i = 0; i < px.length; i += 4) {
+    const r = px[i];
+    const g = px[i + 1];
+    const b = px[i + 2];
+    const a = px[i + 3];
+    const minRGB = Math.min(r, g, b);
+    const maxRGB = Math.max(r, g, b);
+    const spread = maxRGB - minRGB;
+    const isNearWhite = minRGB > 238 && spread < 16;
+    const isSoftWhite = minRGB > 220 && spread < 24;
+
+    if (isNearWhite) {
+      px[i + 3] = 0;
+      continue;
+    }
+    if (isSoftWhite) {
+      px[i + 3] = Math.round(a * 0.18);
+      continue;
+    }
+
+    px[i] = Math.min(255, Math.round(r * 1.04));
+    px[i + 1] = Math.min(255, Math.round(g * 1.02));
+    px[i + 2] = Math.min(255, Math.round(b * 1.02));
+  }
+
+  ctx2d.putImageData(frame, 0, 0);
+  return canvasEl.toDataURL("image/webp", 0.92);
+}
+
+function getProcessedEnemyAsset(src) {
+  if (processedEnemyAssetCache.has(src)) return processedEnemyAssetCache.get(src);
+  const resultPromise = buildProcessedEnemyAsset(src).catch(() => src);
+  processedEnemyAssetCache.set(src, resultPromise);
+  return resultPromise;
 }
 
 function getRaceBadgeHTML(raceKey) {
@@ -800,6 +860,8 @@ function startEncounter(milestone) {
   if (combatSceneFrontElement) combatSceneFrontElement.src = COMBAT_SCENE_ASSET;
   resetSceneParallax();
   const enemyAsset = getEnemyAssetWithFallback(milestone.enemy);
+  const visualToken = activeEncounterVisualToken + 1;
+  activeEncounterVisualToken = visualToken;
   applyEnemyPortraitBackdrop(enemyAsset.primary);
   enemyImageElement.onerror = () => {
     enemyImageElement.onerror = null;
@@ -808,6 +870,17 @@ function startEncounter(milestone) {
   };
   enemyImageElement.src = enemyAsset.primary;
   enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
+  getProcessedEnemyAsset(enemyAsset.primary).then((processedSrc) => {
+    if (visualToken !== activeEncounterVisualToken) return;
+    if (!state.activeEncounter || state.activeEncounter.milestone.id !== milestone.id) return;
+    applyEnemyPortraitBackdrop(processedSrc);
+    enemyImageElement.onerror = () => {
+      enemyImageElement.onerror = null;
+      applyEnemyPortraitBackdrop(enemyAsset.fallback);
+      enemyImageElement.src = enemyAsset.fallback;
+    };
+    enemyImageElement.src = processedSrc;
+  });
   setCombatModalOpen(true);
   setCombatTurn("player");
   setCombatControlsEnabled(true);

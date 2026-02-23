@@ -354,6 +354,16 @@ function drawEnemyPortrait(milestone) {
     ctx2d.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
 
+  ctx2d.strokeStyle = "rgba(255,255,255,0.1)";
+  ctx2d.lineWidth = 1.6;
+  for (let i = 0; i < 5; i += 1) {
+    const y = 26 + i * 68 + rand() * 16;
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, y);
+    ctx2d.bezierCurveTo(160, y - 16, 468, y + 18, 640, y - 8);
+    ctx2d.stroke();
+  }
+
   ctx2d.fillStyle = "rgba(0,0,0,0.34)";
   ctx2d.beginPath();
   ctx2d.ellipse(320, 308, 196, 42, 0, 0, Math.PI * 2);
@@ -536,16 +546,6 @@ function drawEnemyPortrait(milestone) {
     ctx2d.beginPath();
     ctx2d.moveTo(236, 302);
     ctx2d.quadraticCurveTo(320, 284, 404, 302);
-    ctx2d.stroke();
-  }
-
-  ctx2d.strokeStyle = "rgba(255,255,255,0.11)";
-  ctx2d.lineWidth = 1.8;
-  for (let i = 0; i < 5; i += 1) {
-    const y = 26 + i * 68 + rand() * 16;
-    ctx2d.beginPath();
-    ctx2d.moveTo(0, y);
-    ctx2d.bezierCurveTo(160, y - 16, 468, y + 18, 640, y - 8);
     ctx2d.stroke();
   }
 
@@ -1682,6 +1682,7 @@ fullscreenButton.addEventListener("click", async () => {
 });
 
 document.addEventListener("fullscreenchange", () => {
+  document.body.classList.toggle("game-focus-fullscreen", Boolean(document.fullscreenElement));
   fullscreenButton.textContent = document.fullscreenElement ? "Salir pantalla completa" : "Pantalla completa";
 });
 

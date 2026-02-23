@@ -8,7 +8,9 @@ const characterStatsElement = document.getElementById("character-stats");
 const characterBonusElement = document.getElementById("character-bonus");
 const partyListElement = document.getElementById("party-list");
 const recruitListElement = document.getElementById("recruit-list");
+const combatBackdrop = document.getElementById("combat-backdrop");
 const encounterPanel = document.getElementById("encounter-panel");
+const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
 const battleLogElement = document.getElementById("battle-log");
@@ -105,6 +107,43 @@ const state = {
   nextItemId: 1,
   party: [],
 };
+
+function getEnemyPortraitDataUri(enemyName) {
+  const seed = enemyName.length % 3;
+  const palettes = [
+    { from: "#5f0f40", to: "#9a031e" },
+    { from: "#004e64", to: "#00a5cf" },
+    { from: "#2b2d42", to: "#8d99ae" },
+  ];
+  const palette = palettes[seed];
+  const initials = enemyName
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase();
+  const svg = `
+    <svg xmlns='http://www.w3.org/2000/svg' width='720' height='300'>
+      <defs>
+        <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+          <stop offset='0%' stop-color='${palette.from}' />
+          <stop offset='100%' stop-color='${palette.to}' />
+        </linearGradient>
+      </defs>
+      <rect width='100%' height='100%' fill='url(#g)' />
+      <circle cx='130' cy='150' r='86' fill='rgba(255,255,255,0.18)' />
+      <text x='130' y='166' text-anchor='middle' fill='#fff' font-size='64' font-family='Trebuchet MS'>${initials}</text>
+      <text x='230' y='140' fill='rgba(255,255,255,0.95)' font-size='40' font-family='Trebuchet MS'>${enemyName}</text>
+      <text x='230' y='182' fill='rgba(255,255,255,0.72)' font-size='24' font-family='Trebuchet MS'>Objetivo del enfrentamiento</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+function setCombatModalOpen(isOpen) {
+  encounterPanel.classList.toggle("hidden", !isOpen);
+  combatBackdrop.classList.toggle("hidden", !isOpen);
+}
 
 function getPartyBonus() {
   return state.party.reduce(
@@ -297,7 +336,7 @@ function resetRun(customMessage) {
     milestone.completed = false;
   });
 
-  encounterPanel.classList.add("hidden");
+  setCombatModalOpen(false);
   messageElement.textContent = customMessage || `Reinicio en ${route.label}.`;
   updateStatsPanel();
   updateStatus();
@@ -341,7 +380,7 @@ function endEncounterWithVictory() {
   const earnedExp = milestone.hp + 6;
   milestone.completed = true;
   state.activeEncounter = null;
-  encounterPanel.classList.add("hidden");
+  setCombatModalOpen(false);
 
   const lootName = rollLoot();
   gainExp(earnedExp);
@@ -374,7 +413,9 @@ function startEncounter(milestone) {
     hp: milestone.hp,
   };
 
-  encounterPanel.classList.remove("hidden");
+  enemyImageElement.src = getEnemyPortraitDataUri(milestone.enemy);
+  enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
+  setCombatModalOpen(true);
   enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
   updateCombatStats();

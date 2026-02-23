@@ -1,4 +1,4 @@
-# Character Map (UI v0.6.2)
+# Character Map (UI v0.7.1)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,9 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.7.1`: combate en modal con backdrop y retrato visual del enemigo en cada pelea.
+- `v0.7.0`: combate migrado a modal centrado para foco total en enfrentamientos.
+- `v0.6.3`: bloque de combate reposicionado arriba de la columna derecha para acceso inmediato.
 - `v0.6.2`: layout horizontal tipo tablet con mapa a la izquierda y paneles RPG a la derecha.
 - `v0.6.1`: hotfix de layout, el cuadro de juego sube en la pantalla para acceso inmediato.
 - `v0.6.0`: panel de stats, experiencia y niveles, y sistema de equipo (reclutar/quitar aliados con bonos de combate).

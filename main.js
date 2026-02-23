@@ -197,8 +197,10 @@ function setCombatModalOpen(isOpen) {
     resetSceneParallax();
     encounterPanel.removeAttribute("data-faction");
     encounterPanel.removeAttribute("data-race");
+    encounterPanel.removeAttribute("data-style");
     encounterPanel.style.removeProperty("--encounter-race-color");
     encounterPanel.style.removeProperty("--encounter-faction-glow");
+    encounterPanel.style.removeProperty("--enemy-portrait");
   }
 }
 
@@ -257,6 +259,11 @@ function applyEncounterVisualTheme(raceKey) {
   const factionGlow = raceMeta.faction === "infierno" ? "rgba(255, 104, 104, 0.45)" : "rgba(116, 214, 255, 0.42)";
   encounterPanel.style.setProperty("--encounter-race-color", raceMeta.color);
   encounterPanel.style.setProperty("--encounter-faction-glow", factionGlow);
+}
+
+function applyEnemyPortraitBackdrop(assetPath) {
+  if (!assetPath) return;
+  encounterPanel.style.setProperty("--enemy-portrait", `url(${JSON.stringify(assetPath)})`);
 }
 
 function getActiveSummon() {
@@ -792,8 +799,10 @@ function startEncounter(milestone) {
   if (combatSceneFrontElement) combatSceneFrontElement.src = COMBAT_SCENE_ASSET;
   resetSceneParallax();
   const enemyAsset = getEnemyAssetWithFallback(milestone.enemy);
+  applyEnemyPortraitBackdrop(enemyAsset.primary);
   enemyImageElement.onerror = () => {
     enemyImageElement.onerror = null;
+    applyEnemyPortraitBackdrop(enemyAsset.fallback);
     enemyImageElement.src = enemyAsset.fallback;
   };
   enemyImageElement.src = enemyAsset.primary;
@@ -805,6 +814,7 @@ function startEncounter(milestone) {
   const factionLabel = getFactionLabel(milestone.race || "humano");
   encounterPanel.dataset.faction = raceMeta.faction || "cielo";
   encounterPanel.dataset.race = milestone.race || "humano";
+  encounterPanel.dataset.style = raceMeta.style || "fisico";
   applyEncounterVisualTheme(milestone.race || "humano");
   enemyNameElement.innerHTML = `Enfrentamiento: ${milestone.enemy} ${getRaceBadgeHTML(milestone.race || "humano")} (${raceMeta.style} | ${factionLabel})`;
   battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";

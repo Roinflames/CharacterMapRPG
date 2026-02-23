@@ -216,6 +216,7 @@ canvas {
 .encounter-modal {
   --encounter-race-color: #8de0ff;
   --encounter-faction-glow: rgba(116, 214, 255, 0.42);
+  --enemy-portrait: none;
   --race-frame-speed: 4.2s;
   position: fixed;
   top: 50%;
@@ -305,6 +306,19 @@ canvas {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.1) inset,
     0 0 18px color-mix(in srgb, var(--encounter-race-color) 34%, transparent);
+}
+
+.enemy-depth-layer {
+  position: absolute;
+  inset: -8px;
+  z-index: 1;
+  pointer-events: none;
+  background-image: var(--enemy-portrait);
+  background-size: cover;
+  background-position: center 46%;
+  filter: blur(11px) saturate(1.2) brightness(0.78);
+  opacity: 0.58;
+  transform: scale(1.1);
 }
 
 .enemy-frame::before {
@@ -546,6 +560,28 @@ button:disabled {
   filter: saturate(1.2) contrast(1.1) hue-rotate(10deg);
 }
 
+.encounter-modal[data-style="magico"] .enemy-depth-layer {
+  mix-blend-mode: screen;
+  animation: magicAura 3.2s ease-in-out infinite;
+}
+
+.encounter-modal[data-style="fisico"] .enemy-depth-layer {
+  mix-blend-mode: multiply;
+  animation: physicalAura 2.8s ease-in-out infinite;
+}
+
+.encounter-modal[data-style="magico"] .enemy-frame {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 22px color-mix(in srgb, var(--encounter-race-color) 45%, transparent);
+}
+
+.encounter-modal[data-style="fisico"] .enemy-frame {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 0 16px color-mix(in srgb, var(--encounter-race-color) 28%, transparent);
+}
+
 .encounter-modal[data-race="humano"] { --race-frame-speed: 4.6s; }
 .encounter-modal[data-race="elfo"] { --race-frame-speed: 3.8s; }
 .encounter-modal[data-race="enano"] { --race-frame-speed: 5s; }
@@ -663,6 +699,18 @@ button:active {
   }
 }
 
+@keyframes magicAura {
+  0% { opacity: 0.45; filter: blur(12px) saturate(1.18) brightness(0.74) hue-rotate(-4deg); }
+  50% { opacity: 0.72; filter: blur(9px) saturate(1.34) brightness(0.9) hue-rotate(8deg); }
+  100% { opacity: 0.45; filter: blur(12px) saturate(1.18) brightness(0.74) hue-rotate(-4deg); }
+}
+
+@keyframes physicalAura {
+  0% { opacity: 0.52; filter: blur(9px) saturate(1.1) brightness(0.7) contrast(1.04); }
+  50% { opacity: 0.66; filter: blur(7px) saturate(1.16) brightness(0.78) contrast(1.12); }
+  100% { opacity: 0.52; filter: blur(9px) saturate(1.1) brightness(0.7) contrast(1.04); }
+}
+
 @keyframes sceneDrift {
   0% { transform: translate(0, 0) scale(1.06); }
   50% { transform: translate(-6px, 2px) scale(1.07); }
@@ -672,6 +720,7 @@ button:active {
 @media (prefers-reduced-motion: reduce) {
   .encounter-modal::before,
   .enemy-frame::before,
+  .enemy-depth-layer,
   .scene-front {
     animation: none;
   }

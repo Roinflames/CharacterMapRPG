@@ -1,4 +1,4 @@
-# Character Map (UI v0.26.3)
+# Character Map (UI v0.27.1)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,8 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.27.1`: panel "Estimaciones de avance" oculto en la vista de juego.
+- `v0.27.0`: ataque previsto visible antes de golpear y descuento de vida gradual en barras HP.
 - `v0.26.3`: bloqueo del scroll del navegador al mover el personaje con WASD o flechas.
 - `v0.26.2`: correccion de ojos en retratos (el visor de bandido/capitan ya no tapa la mirada) y ajuste de brillo/tamano ocular.
 - `v0.26.0`: retratos enemigos rediseñados con estilo mas serio (arquetipos por enemigo, mejor anatomia facial y sombreado cinematografico).

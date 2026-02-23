@@ -428,7 +428,7 @@ canvas {
 .hp-fill {
   height: 100%;
   width: 100%;
-  transition: width 300ms ease;
+  transition: none;
 }
 
 .hp-fill.player {
@@ -453,6 +453,13 @@ canvas {
   color: #89ebff;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+.attack-preview {
+  margin: 0.3rem 0 0;
+  font-weight: 700;
+  color: #ffd98a;
+  min-height: 1.25rem;
 }
 
 #battle-log {

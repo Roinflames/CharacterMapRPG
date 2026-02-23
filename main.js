@@ -27,7 +27,10 @@ const enemyImageElement = document.getElementById("enemy-image");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
 const diceRollElement = document.getElementById("dice-roll");
+const attackPreviewElement = document.getElementById("attack-preview");
 const turnIndicatorElement = document.getElementById("turn-indicator");
+const playerHpFillElement = document.getElementById("player-hp-fill");
+const enemyHpFillElement = document.getElementById("enemy-hp-fill");
 const battleLogElement = document.getElementById("battle-log");
 const inventoryListElement = document.getElementById("inventory-list");
 const attackButton = document.getElementById("attack-btn");
@@ -188,6 +191,9 @@ const state = {
   combatHistory: [],
   combatTurn: "player",
   combatLocked: false,
+  pendingAttackPreview: null,
+  hpVisual: { player: 100, enemy: 100 },
+  hpAnimationFrame: { player: null, enemy: null },
 };
 
 function setCombatModalOpen(isOpen) {
@@ -201,6 +207,8 @@ function setCombatModalOpen(isOpen) {
     encounterPanel.style.removeProperty("--encounter-race-color");
     encounterPanel.style.removeProperty("--encounter-faction-glow");
     encounterPanel.style.removeProperty("--enemy-portrait");
+    state.pendingAttackPreview = null;
+    if (attackPreviewElement) attackPreviewElement.textContent = "Ataque previsto: --";
   }
 }
 
@@ -608,6 +616,44 @@ function setCombatControlsEnabled(enabled) {
 function setCombatTurn(turn) {
   state.combatTurn = turn;
   turnIndicatorElement.textContent = turn === "player" ? "Turno: Jugador" : "Turno: Enemigo";
+  if (turn === "player") {
+    refreshAttackPreview();
+  } else {
+    state.pendingAttackPreview = null;
+    if (attackPreviewElement) attackPreviewElement.textContent = "Ataque previsto: --";
+  }
+}
+
+function computeAttackOutcome(baseDamage, d20, playerRace, enemyRace) {
+  const raceMult = getRaceDamageMultiplier(playerRace, enemyRace);
+  let finalDamage = Math.max(1, Math.round(baseDamage * raceMult));
+  let rollText = `d20: ${d20}`;
+  if (d20 === 20) {
+    finalDamage = Math.max(1, Math.round(finalDamage * 2));
+    rollText = "d20: 20 (CRITICO x2)";
+  } else if (d20 === 1) {
+    finalDamage = Math.max(1, Math.floor(finalDamage * 0.5));
+    rollText = "d20: 1 (FALLO DURO x0.5)";
+  }
+  return { finalDamage, rollText, d20, baseDamage };
+}
+
+function refreshAttackPreview() {
+  if (!state.activeEncounter || state.combatTurn !== "player") {
+    state.pendingAttackPreview = null;
+    if (attackPreviewElement) attackPreviewElement.textContent = "Ataque previsto: --";
+    return;
+  }
+
+  const playerRace = getPlayerRaceKey();
+  const enemyRace = state.activeEncounter.milestone.race || "humano";
+  const baseDamage = getPlayerAtk() + Math.floor(Math.random() * 4);
+  const d20 = Math.floor(Math.random() * 20) + 1;
+  const outcome = computeAttackOutcome(baseDamage, d20, playerRace, enemyRace);
+  state.pendingAttackPreview = outcome;
+  if (attackPreviewElement) {
+    attackPreviewElement.textContent = `Ataque previsto: ${outcome.finalDamage} dano (${outcome.rollText})`;
+  }
 }
 
 function wait(ms) {
@@ -1033,6 +1079,50 @@ function updateStatus() {
 function updateCombatStats() {
   if (!state.activeEncounter) return;
   combatStatsElement.textContent = `HP jugador: ${player.hp}/${getMaxHp()} | HP enemigo: ${state.activeEncounter.hp}`;
+  const playerPercent = (player.hp / getMaxHp()) * 100;
+  const enemyPercent = (state.activeEncounter.hp / state.activeEncounter.milestone.hp) * 100;
+  animateHpFill("player", Math.max(0, Math.min(100, playerPercent)));
+  animateHpFill("enemy", Math.max(0, Math.min(100, enemyPercent)));
+}
+
+function animateHpFill(kind, targetPercent, immediate = false) {
+  const element = kind === "player" ? playerHpFillElement : enemyHpFillElement;
+  if (!element) return;
+  const previous = state.hpVisual[kind] ?? targetPercent;
+  const clampedTarget = Math.max(0, Math.min(100, targetPercent));
+
+  if (state.hpAnimationFrame[kind]) {
+    cancelAnimationFrame(state.hpAnimationFrame[kind]);
+    state.hpAnimationFrame[kind] = null;
+  }
+
+  if (immediate) {
+    state.hpVisual[kind] = clampedTarget;
+    element.style.width = `${clampedTarget}%`;
+    return;
+  }
+
+  const delta = Math.abs(clampedTarget - previous);
+  const duration = Math.max(420, Math.min(1300, 420 + delta * 12));
+  const startedAt = performance.now();
+
+  const step = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    const eased = 1 - (1 - progress) * (1 - progress);
+    const current = previous + (clampedTarget - previous) * eased;
+    state.hpVisual[kind] = current;
+    element.style.width = `${current}%`;
+
+    if (progress < 1) {
+      state.hpAnimationFrame[kind] = requestAnimationFrame(step);
+    } else {
+      state.hpAnimationFrame[kind] = null;
+      state.hpVisual[kind] = clampedTarget;
+      element.style.width = `${clampedTarget}%`;
+    }
+  };
+
+  state.hpAnimationFrame[kind] = requestAnimationFrame(step);
 }
 
 function rollLoot() {
@@ -1097,6 +1187,7 @@ function startEncounter(milestone) {
     hp: milestone.hp,
   };
   state.combatLocked = false;
+  state.pendingAttackPreview = null;
 
   if (combatSceneBackElement) combatSceneBackElement.src = COMBAT_SCENE_ASSET;
   if (combatSceneFrontElement) combatSceneFrontElement.src = COMBAT_SCENE_ASSET;
@@ -1128,6 +1219,9 @@ function startEncounter(milestone) {
   updateStoryLine(`Combate activo: ${milestone.enemy} representa al ${factionLabel}.`);
   diceRollElement.textContent = "d20: --";
   logCombatEvent(`Inicia combate contra ${milestone.enemy}.`);
+  const startPlayerPercent = (player.hp / getMaxHp()) * 100;
+  animateHpFill("player", Math.max(0, Math.min(100, startPlayerPercent)), true);
+  animateHpFill("enemy", 100, true);
   updateCombatStats();
 }
 
@@ -1175,30 +1269,32 @@ function move(dx, dy) {
   tryFinishMap();
 }
 
-async function applyDamageToEnemy(damage, label) {
+async function applyDamageToEnemy(damage, label, fixedAttackOutcome = null) {
   if (!state.activeEncounter) return;
 
   await playTemporaryClass(encounterPanel, "player-attack-anim", 260);
   await playTemporaryClass(enemyImageElement, "enemy-hit-anim", 300);
   const playerRace = getPlayerRaceKey();
   const enemyRace = state.activeEncounter.milestone.race || "humano";
-  const raceMult = getRaceDamageMultiplier(playerRace, enemyRace);
-  let finalDamage = Math.max(1, Math.round(damage * raceMult));
+  let finalDamage = 0;
   let rollText = "d20: --";
 
   if (label === "Ataque") {
-    const d20 = Math.floor(Math.random() * 20) + 1;
-    if (d20 === 20) {
-      finalDamage = Math.max(1, Math.round(finalDamage * 2));
-      rollText = `d20: 20 (CRITICO x2)`;
-    } else if (d20 === 1) {
-      finalDamage = Math.max(1, Math.floor(finalDamage * 0.5));
-      rollText = `d20: 1 (FALLO DURO x0.5)`;
+    if (fixedAttackOutcome) {
+      finalDamage = fixedAttackOutcome.finalDamage;
+      rollText = fixedAttackOutcome.rollText;
     } else {
-      rollText = `d20: ${d20}`;
+      const d20 = Math.floor(Math.random() * 20) + 1;
+      const outcome = computeAttackOutcome(damage, d20, playerRace, enemyRace);
+      finalDamage = outcome.finalDamage;
+      rollText = outcome.rollText;
     }
     diceRollElement.textContent = rollText;
+    state.pendingAttackPreview = null;
+    if (attackPreviewElement) attackPreviewElement.textContent = "Ataque previsto: --";
   } else {
+    const raceMult = getRaceDamageMultiplier(playerRace, enemyRace);
+    finalDamage = Math.max(1, Math.round(damage * raceMult));
     diceRollElement.textContent = "d20: n/a";
   }
 
@@ -1380,9 +1476,10 @@ function render() {
 
 attackButton.addEventListener("click", async () => {
   await runPlayerAction(async () => {
-    const minDamage = getPlayerAtk();
-    const damage = minDamage + Math.floor(Math.random() * 4);
-    await applyDamageToEnemy(damage, "Ataque");
+    if (!state.pendingAttackPreview) refreshAttackPreview();
+    const preview = state.pendingAttackPreview;
+    if (!preview) return;
+    await applyDamageToEnemy(preview.baseDamage, "Ataque", preview);
   });
 });
 

@@ -1486,7 +1486,26 @@ armorSelectElement.addEventListener("change", () => {
 });
 
 window.addEventListener("keydown", (event) => {
+  const activeTag = document.activeElement?.tagName || "";
+  const isTypingContext =
+    activeTag === "INPUT" ||
+    activeTag === "TEXTAREA" ||
+    activeTag === "SELECT" ||
+    document.activeElement?.isContentEditable;
   const key = event.key.toLowerCase();
+  const isMovementKey =
+    key === "arrowup" ||
+    key === "arrowdown" ||
+    key === "arrowleft" ||
+    key === "arrowright" ||
+    key === "w" ||
+    key === "a" ||
+    key === "s" ||
+    key === "d";
+
+  if (isMovementKey && !isTypingContext) {
+    event.preventDefault();
+  }
 
   if (state.activeEncounter) {
     if (key === "a") {

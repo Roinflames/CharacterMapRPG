@@ -1,4 +1,4 @@
-# Character Map (UI v0.27.3)
+# Character Map (UI v0.27.4)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
@@ -37,6 +37,7 @@ Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.27.4`: animacion de victoria al derrotar un enemigo antes de cerrar el combate.
 - `v0.27.3`: titulo del navegador sincronizado con la version actual de UI (`Character Map RPG | UI vX.Y.Z`).
 - `v0.27.2`: animacion de derrota antes del reinicio tras perder un combate (transicion mas suave).
 - `v0.27.1`: panel "Estimaciones de avance" oculto en la vista de juego.

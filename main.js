@@ -1136,9 +1136,12 @@ function rollLoot() {
   return ITEM_DEFS[lootType].name;
 }
 
-function endEncounterWithVictory() {
+async function endEncounterWithVictory() {
   const milestone = state.activeEncounter.milestone;
   const earnedExp = milestone.hp + 6;
+  setCombatControlsEnabled(false);
+  await playTemporaryClass(encounterPanel, "victory-anim", 700);
+  await wait(120);
   milestone.completed = true;
   state.activeEncounter = null;
   state.combatLocked = false;
@@ -1311,7 +1314,7 @@ async function applyDamageToEnemy(damage, label, fixedAttackOutcome = null) {
   if (state.activeEncounter.hp <= 0) {
     battleLogElement.textContent = `${label} hace ${finalDamage}. Enemigo derrotado.`;
     logCombatEvent(`${label}: ${finalDamage} de dano final (${getRaceMeta(playerRace).label}) ${rollText}.`);
-    endEncounterWithVictory();
+    await endEncounterWithVictory();
     return;
   }
 

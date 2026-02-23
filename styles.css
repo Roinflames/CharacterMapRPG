@@ -31,8 +31,11 @@ body {
 }
 
 .panel,
+.character-card,
+.party-card,
 .game-shell,
-.encounter {
+.encounter,
+.inventory {
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 12px;
@@ -82,6 +85,59 @@ body {
   font-weight: 700;
 }
 
+.meta-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.character-card h2,
+.party-card h2,
+.inventory h2,
+.encounter h2 {
+  margin: 0;
+}
+
+.character-card p,
+.inventory-help {
+  margin: 0.5rem 0 0;
+}
+
+.party-card h3 {
+  margin: 0.7rem 0 0.35rem;
+  font-size: 1rem;
+}
+
+.mini-list,
+.inventory-list {
+  list-style: none;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.mini-list li,
+.inventory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+}
+
+.inventory-item p {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.inventory-empty {
+  opacity: 0.85;
+}
+
 .game-shell {
   padding: 0.6rem;
 }
@@ -94,7 +150,6 @@ canvas {
 }
 
 .encounter h2 {
-  margin: 0;
   color: #ffb3b5;
 }
 
@@ -108,10 +163,15 @@ canvas {
   min-height: 1.3rem;
 }
 
+.encounter-actions,
+.inventory-actions,
+.party-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
 .encounter-actions {
   margin-top: 0.6rem;
-  display: flex;
-  gap: 0.5rem;
 }
 
 .hidden {
@@ -134,16 +194,15 @@ button {
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.18);
   color: var(--text);
-  font-size: 1.1rem;
+  font-size: 1rem;
   min-width: 52px;
-  min-height: 52px;
+  min-height: 42px;
 }
 
 #attack-btn,
 #heal-btn {
   min-width: 120px;
   min-height: 44px;
-  font-size: 1rem;
 }
 
 #attack-btn {
@@ -158,4 +217,10 @@ button {
 
 button:active {
   transform: scale(0.98);
+}
+
+@media (min-width: 860px) {
+  .meta-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }

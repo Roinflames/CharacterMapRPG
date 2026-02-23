@@ -4,14 +4,35 @@ const ctx = canvas.getContext("2d");
 const statusElement = document.getElementById("milestones-status");
 const messageElement = document.getElementById("milestone-message");
 const routeSelect = document.getElementById("route-select");
+const characterStatsElement = document.getElementById("character-stats");
+const characterBonusElement = document.getElementById("character-bonus");
+const partyListElement = document.getElementById("party-list");
+const recruitListElement = document.getElementById("recruit-list");
 const encounterPanel = document.getElementById("encounter-panel");
 const enemyNameElement = document.getElementById("enemy-name");
 const combatStatsElement = document.getElementById("combat-stats");
 const battleLogElement = document.getElementById("battle-log");
+const inventoryListElement = document.getElementById("inventory-list");
 const attackButton = document.getElementById("attack-btn");
 const healButton = document.getElementById("heal-btn");
 
 const TILE = 32;
+const MAX_PARTY_SIZE = 3;
+
+const ITEM_DEFS = {
+  potion: { name: "Pocion", effect: "Recupera 8 HP" },
+  bomb: { name: "Bomba", effect: "Hace 9 dano al enemigo" },
+  elixir: { name: "Elixir", effect: "Sube HP maximo +2 y cura 5" },
+};
+
+const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
+
+const COMPANIONS = [
+  { id: "tank", name: "Bran Escudo", atk: 1, def: 1, hp: 4 },
+  { id: "rogue", name: "Lyra Veloz", atk: 2, def: 0, hp: 0 },
+  { id: "sage", name: "Nora Savia", atk: 0, def: 1, hp: 3 },
+  { id: "hunter", name: "Kael Cazador", atk: 1, def: 0, hp: 2 },
+];
 
 const ROUTES = {
   route1: {
@@ -63,18 +84,212 @@ const ROUTES = {
   },
 };
 
-const player = { x: 1, y: 1, hp: 24, maxHp: 24, won: false };
+const player = {
+  x: 1,
+  y: 1,
+  hp: 24,
+  baseMaxHp: 24,
+  level: 1,
+  exp: 0,
+  nextExp: 20,
+  baseAtk: 4,
+  baseDef: 1,
+  won: false,
+};
+
 const state = {
   activeEncounter: null,
   routeId: "route1",
   route: ROUTES.route1,
+  inventory: [],
+  nextItemId: 1,
+  party: [],
 };
+
+function getPartyBonus() {
+  return state.party.reduce(
+    (acc, member) => {
+      acc.atk += member.atk;
+      acc.def += member.def;
+      acc.hp += member.hp;
+      return acc;
+    },
+    { atk: 0, def: 0, hp: 0 },
+  );
+}
+
+function getMaxHp() {
+  return player.baseMaxHp + getPartyBonus().hp;
+}
+
+function getTotalItems() {
+  return state.inventory.reduce((sum, item) => sum + item.qty, 0);
+}
+
+function getPlayerAtk() {
+  return player.baseAtk + getPartyBonus().atk;
+}
+
+function getPlayerDef() {
+  return player.baseDef + getPartyBonus().def;
+}
+
+function findItem(type) {
+  return state.inventory.find((item) => item.type === type);
+}
+
+function addItem(type, qty = 1) {
+  const existing = findItem(type);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    state.inventory.push({ id: state.nextItemId++, type, qty });
+  }
+  renderInventory();
+}
+
+function removeItem(itemId, qty = 1) {
+  const item = state.inventory.find((entry) => entry.id === itemId);
+  if (!item) return false;
+
+  item.qty -= qty;
+  if (item.qty <= 0) {
+    state.inventory = state.inventory.filter((entry) => entry.id !== itemId);
+  }
+
+  renderInventory();
+  return true;
+}
+
+function renderInventory() {
+  if (state.inventory.length === 0) {
+    inventoryListElement.innerHTML = '<li class="inventory-empty">Sin items todavia.</li>';
+    updateStatus();
+    return;
+  }
+
+  inventoryListElement.innerHTML = state.inventory
+    .map((item) => {
+      const def = ITEM_DEFS[item.type];
+      return `
+        <li class="inventory-item">
+          <div>
+            <strong>${def.name}</strong> x${item.qty}
+            <p>${def.effect}</p>
+          </div>
+          <div class="inventory-actions">
+            <button data-action="use" data-item-id="${item.id}" type="button">Usar</button>
+            <button data-action="drop" data-item-id="${item.id}" type="button">Descartar</button>
+          </div>
+        </li>
+      `;
+    })
+    .join("");
+
+  updateStatus();
+}
+
+function renderParty() {
+  if (state.party.length === 0) {
+    partyListElement.innerHTML = '<li class="inventory-empty">No tienes aliados activos.</li>';
+  } else {
+    partyListElement.innerHTML = state.party
+      .map(
+        (member) => `
+          <li>
+            <span>${member.name} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
+            <div class="party-actions">
+              <button data-party-action="remove" data-member-id="${member.id}" type="button">Quitar</button>
+            </div>
+          </li>
+        `,
+      )
+      .join("");
+  }
+
+  const recruits = COMPANIONS.filter((member) => !state.party.some((ally) => ally.id === member.id));
+  if (recruits.length === 0) {
+    recruitListElement.innerHTML = '<li class="inventory-empty">Todos los reclutas ya estan en equipo.</li>';
+  } else {
+    recruitListElement.innerHTML = recruits
+      .map(
+        (member) => `
+          <li>
+            <span>${member.name} (+${member.atk} ATQ, +${member.def} DEF, +${member.hp} HP)</span>
+            <div class="party-actions">
+              <button data-party-action="add" data-member-id="${member.id}" type="button">Reclutar</button>
+            </div>
+          </li>
+        `,
+      )
+      .join("");
+  }
+
+  const maxHp = getMaxHp();
+  if (player.hp > maxHp) player.hp = maxHp;
+  updateStatsPanel();
+  updateStatus();
+}
+
+function updateStatsPanel() {
+  const maxHp = getMaxHp();
+  const bonus = getPartyBonus();
+  characterStatsElement.textContent = `Nivel ${player.level} | EXP ${player.exp}/${player.nextExp} | HP ${player.hp}/${maxHp} | ATQ ${getPlayerAtk()} | DEF ${getPlayerDef()}`;
+  characterBonusElement.textContent = `Bonos de equipo: +${bonus.atk} ATQ, +${bonus.def} DEF, +${bonus.hp} HP.`;
+}
+
+function addPartyMember(memberId) {
+  if (state.party.length >= MAX_PARTY_SIZE) {
+    messageElement.textContent = "Tu equipo ya esta completo (max 3).";
+    return;
+  }
+
+  const candidate = COMPANIONS.find((member) => member.id === memberId);
+  if (!candidate) return;
+  if (state.party.some((member) => member.id === candidate.id)) return;
+
+  state.party.push(candidate);
+  messageElement.textContent = `${candidate.name} se unio al equipo.`;
+  renderParty();
+}
+
+function removePartyMember(memberId) {
+  const existing = state.party.find((member) => member.id === memberId);
+  if (!existing) return;
+
+  state.party = state.party.filter((member) => member.id !== memberId);
+  messageElement.textContent = `${existing.name} salio del equipo.`;
+  renderParty();
+}
+
+function gainExp(amount) {
+  player.exp += amount;
+  let leveled = false;
+
+  while (player.exp >= player.nextExp) {
+    player.exp -= player.nextExp;
+    player.level += 1;
+    player.nextExp = Math.floor(player.nextExp * 1.35);
+    player.baseMaxHp += 3;
+    player.baseAtk += 1;
+    player.baseDef += 1;
+    player.hp = Math.min(getMaxHp(), player.hp + 4);
+    leveled = true;
+  }
+
+  if (leveled) {
+    messageElement.textContent = `Subiste a nivel ${player.level}.`;
+  }
+
+  updateStatsPanel();
+  updateStatus();
+}
 
 function resetRun(customMessage) {
   const route = state.route;
   player.x = route.start.x;
   player.y = route.start.y;
-  player.hp = player.maxHp;
+  player.hp = getMaxHp();
   player.won = false;
   state.activeEncounter = null;
 
@@ -84,6 +299,7 @@ function resetRun(customMessage) {
 
   encounterPanel.classList.add("hidden");
   messageElement.textContent = customMessage || `Reinicio en ${route.label}.`;
+  updateStatsPanel();
   updateStatus();
 }
 
@@ -106,37 +322,49 @@ function getMilestoneAt(x, y) {
 
 function updateStatus() {
   const completed = state.route.milestones.filter((milestone) => milestone.completed).length;
-  statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | HP: ${player.hp}/${player.maxHp}`;
+  statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | Nivel: ${player.level} | Items: ${getTotalItems()}`;
 }
 
 function updateCombatStats() {
   if (!state.activeEncounter) return;
-  combatStatsElement.textContent = `HP jugador: ${player.hp}/${player.maxHp} | HP enemigo: ${state.activeEncounter.hp}`;
+  combatStatsElement.textContent = `HP jugador: ${player.hp}/${getMaxHp()} | HP enemigo: ${state.activeEncounter.hp}`;
+}
+
+function rollLoot() {
+  const lootType = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
+  addItem(lootType, 1);
+  return ITEM_DEFS[lootType].name;
 }
 
 function endEncounterWithVictory() {
   const milestone = state.activeEncounter.milestone;
+  const earnedExp = milestone.hp + 6;
   milestone.completed = true;
   state.activeEncounter = null;
   encounterPanel.classList.add("hidden");
-  messageElement.textContent = `Hito superado: ${milestone.enemy}`;
+
+  const lootName = rollLoot();
+  gainExp(earnedExp);
+  messageElement.textContent = `Hito superado: ${milestone.enemy}. +${earnedExp} EXP, loot: ${lootName}.`;
   updateStatus();
 }
 
 function enemyTurn() {
   if (!state.activeEncounter) return;
 
-  const damage = Math.floor(Math.random() * 4) + 2;
-  player.hp = Math.max(0, player.hp - damage);
+  const rawDamage = Math.floor(Math.random() * 4) + 2;
+  const reducedDamage = Math.max(1, rawDamage - getPlayerDef());
+  player.hp = Math.max(0, player.hp - reducedDamage);
 
   if (player.hp <= 0) {
-    battleLogElement.textContent = `Recibiste ${damage}. Has caido.`;
+    battleLogElement.textContent = `Recibiste ${reducedDamage}. Has caido.`;
     resetRun(`Derrota en ${state.route.label}.`);
     return;
   }
 
-  battleLogElement.textContent = `El enemigo contraataca y hace ${damage} de dano.`;
+  battleLogElement.textContent = `El enemigo contraataca y hace ${reducedDamage} de dano.`;
   updateCombatStats();
+  updateStatsPanel();
   updateStatus();
 }
 
@@ -148,7 +376,7 @@ function startEncounter(milestone) {
 
   encounterPanel.classList.remove("hidden");
   enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;
-  battleLogElement.textContent = "Tu turno: Ataca o curate.";
+  battleLogElement.textContent = "Tu turno: Ataca, curate o usa un item.";
   updateCombatStats();
 }
 
@@ -185,6 +413,76 @@ function move(dx, dy) {
   }
 
   tryFinishMap();
+}
+
+function applyDamageToEnemy(damage, label) {
+  if (!state.activeEncounter) return;
+
+  state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - damage);
+
+  if (state.activeEncounter.hp <= 0) {
+    battleLogElement.textContent = `${label} hace ${damage}. Enemigo derrotado.`;
+    endEncounterWithVictory();
+    return;
+  }
+
+  battleLogElement.textContent = `${label} hace ${damage}. El enemigo sigue en pie.`;
+  updateCombatStats();
+  enemyTurn();
+}
+
+function useItemById(itemId) {
+  const item = state.inventory.find((entry) => entry.id === itemId);
+  if (!item) return;
+
+  if (item.type === "potion") {
+    const heal = 8;
+    player.hp = Math.min(getMaxHp(), player.hp + heal);
+    removeItem(itemId, 1);
+    messageElement.textContent = `Usaste Pocion (+${heal} HP).`;
+    if (state.activeEncounter) {
+      battleLogElement.textContent = `Usaste Pocion y recuperaste ${heal} HP.`;
+      updateCombatStats();
+      enemyTurn();
+    }
+    updateStatsPanel();
+    updateStatus();
+    return;
+  }
+
+  if (item.type === "elixir") {
+    player.baseMaxHp += 2;
+    player.hp = Math.min(getMaxHp(), player.hp + 5);
+    removeItem(itemId, 1);
+    messageElement.textContent = "Usaste Elixir (+2 HP base, +5 HP).";
+    if (state.activeEncounter) {
+      battleLogElement.textContent = "Elixir activado. El enemigo toma su turno.";
+      updateCombatStats();
+      enemyTurn();
+    }
+    updateStatsPanel();
+    updateStatus();
+    return;
+  }
+
+  if (item.type === "bomb") {
+    if (!state.activeEncounter) {
+      messageElement.textContent = "La Bomba solo se puede usar en combate.";
+      return;
+    }
+
+    removeItem(itemId, 1);
+    applyDamageToEnemy(9, "Bomba");
+  }
+}
+
+function dropItemById(itemId) {
+  const item = state.inventory.find((entry) => entry.id === itemId);
+  if (!item) return;
+
+  const itemName = ITEM_DEFS[item.type].name;
+  removeItem(itemId, 1);
+  messageElement.textContent = `Descartaste 1 ${itemName}.`;
 }
 
 function drawTile(tile, x, y) {
@@ -268,29 +566,55 @@ function render() {
 attackButton.addEventListener("click", () => {
   if (!state.activeEncounter) return;
 
-  const damage = Math.floor(Math.random() * 5) + 4;
-  state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - damage);
-
-  if (state.activeEncounter.hp <= 0) {
-    battleLogElement.textContent = `Golpe de ${damage}. Enemigo derrotado.`;
-    endEncounterWithVictory();
-    return;
-  }
-
-  battleLogElement.textContent = `Golpe de ${damage}. El enemigo sigue en pie.`;
-  updateCombatStats();
-  enemyTurn();
+  const minDamage = getPlayerAtk();
+  const damage = minDamage + Math.floor(Math.random() * 4);
+  applyDamageToEnemy(damage, "Ataque");
 });
 
 healButton.addEventListener("click", () => {
   if (!state.activeEncounter) return;
 
   const heal = Math.floor(Math.random() * 4) + 3;
-  player.hp = Math.min(player.maxHp, player.hp + heal);
+  player.hp = Math.min(getMaxHp(), player.hp + heal);
   battleLogElement.textContent = `Te curas ${heal} puntos.`;
   updateCombatStats();
+  updateStatsPanel();
   updateStatus();
   enemyTurn();
+});
+
+inventoryListElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+
+  const action = target.getAttribute("data-action");
+  const itemId = Number(target.getAttribute("data-item-id"));
+  if (!itemId) return;
+
+  if (action === "use") useItemById(itemId);
+  if (action === "drop") dropItemById(itemId);
+});
+
+partyListElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+
+  const action = target.getAttribute("data-party-action");
+  const memberId = target.getAttribute("data-member-id");
+  if (!memberId) return;
+
+  if (action === "remove") removePartyMember(memberId);
+});
+
+recruitListElement.addEventListener("click", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLButtonElement)) return;
+
+  const action = target.getAttribute("data-party-action");
+  const memberId = target.getAttribute("data-member-id");
+  if (!memberId) return;
+
+  if (action === "add") addPartyMember(memberId);
 });
 
 window.addEventListener("keydown", (event) => {
@@ -318,5 +642,7 @@ routeSelect.addEventListener("change", () => {
   switchRoute(routeSelect.value);
 });
 
+renderInventory();
+renderParty();
 switchRoute(routeSelect.value);
 render();

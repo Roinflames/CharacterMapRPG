@@ -1,10 +1,10 @@
-# Character Map (UI v0.4.0)
+# Character Map (UI v0.6.0)
 
-Proyecto frontend simple de un personaje que se mueve por un mapa con colisiones, hitos de ruta y enfrentamientos RPG por turnos.
+Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
 
 ## Correr local
 
-### Opción 1: Python
+### Opcion 1: Python
 
 ```bash
 cd /home/rreyes/projects/labs/character-map-v0.1.0
@@ -13,7 +13,7 @@ python3 -m http.server 8080
 
 Abrir `http://localhost:8080`.
 
-### Opción 2: Docker
+### Opcion 2: Docker
 
 ```bash
 cd /home/rreyes/projects/labs/character-map-v0.1.0
@@ -24,19 +24,21 @@ Abrir `http://localhost:8080`.
 
 ## Variables de entorno
 
-No requiere variables de entorno para esta versión.
+No requiere variables de entorno para esta version.
 
 ## Deploy
 
 Render Static Site:
 
-- Build command: vacío
+- Build command: vacio
 - Publish directory: `.`
 
-También se puede desplegar como contenedor con el `Dockerfile` incluido.
+Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
 ## Historial de versiones
 
+- `v0.6.0`: panel de stats, experiencia y niveles, y sistema de equipo (reclutar/quitar aliados con bonos de combate).
+- `v0.5.0`: inventario con uso y descarte de items, y loot por enfrentamiento.
 - `v0.4.0`: selector de rutas y nueva Ruta 2 con mapa e hitos RPG propios.
 - `v0.3.0`: hitos convertidos en enfrentamientos RPG, sistema de HP, combate por turnos y progreso de ruta.
-- `v0.1.0`: mapa base, personaje movible, colisiones, meta y controles táctiles.
+- `v0.1.0`: mapa base, personaje movible, colisiones, meta y controles tactiles.

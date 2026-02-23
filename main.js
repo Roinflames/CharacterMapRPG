@@ -1140,8 +1140,11 @@ async function endEncounterWithVictory() {
   const milestone = state.activeEncounter.milestone;
   const earnedExp = milestone.hp + 6;
   setCombatControlsEnabled(false);
-  await playTemporaryClass(encounterPanel, "victory-anim", 700);
-  await wait(120);
+  await Promise.all([
+    playTemporaryClass(encounterPanel, "victory-anim", 900),
+    playTemporaryClass(enemyImageElement, "victory-hit-anim", 900),
+  ]);
+  await wait(160);
   milestone.completed = true;
   state.activeEncounter = null;
   state.combatLocked = false;
@@ -1177,8 +1180,13 @@ async function enemyTurn() {
   if (player.hp <= 0) {
     battleLogElement.textContent = `Recibiste ${reducedDamage}. Has caido.`;
     logCombatEvent(`Derrota: recibes ${reducedDamage} de dano.`);
+    updateCombatStats();
+    await wait(220);
     setCombatControlsEnabled(false);
-    await playTemporaryClass(encounterPanel, "defeat-anim", 760);
+    await Promise.all([
+      playTemporaryClass(encounterPanel, "defeat-anim", 900),
+      playTemporaryClass(enemyImageElement, "defeat-hit-anim", 900),
+    ]);
     await wait(120);
     resetRun(`Derrota en ${state.route.label}.`);
     return;
@@ -1314,6 +1322,8 @@ async function applyDamageToEnemy(damage, label, fixedAttackOutcome = null) {
   if (state.activeEncounter.hp <= 0) {
     battleLogElement.textContent = `${label} hace ${finalDamage}. Enemigo derrotado.`;
     logCombatEvent(`${label}: ${finalDamage} de dano final (${getRaceMeta(playerRace).label}) ${rollText}.`);
+    updateCombatStats();
+    await wait(200);
     await endEncounterWithVictory();
     return;
   }

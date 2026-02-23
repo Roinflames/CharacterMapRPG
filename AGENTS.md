@@ -4,7 +4,7 @@
 
 - Proyecto: Character Map
 - Tipo: Frontend estatico (HTML/CSS/JS)
-- Version activa UI: `v0.27.4`
+- Version activa UI: `v0.27.5`
 - Objetivo actual: RPG de rutas con inventario, niveles y equipo
 
 ## Reglas operativas locales

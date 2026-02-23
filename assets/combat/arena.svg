@@ -1,18 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#101a2b"/>
-      <stop offset="100%" stop-color="#234d67"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b2038"/>
+      <stop offset="60%" stop-color="#123a55"/>
+      <stop offset="100%" stop-color="#184f68"/>
     </linearGradient>
-    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#385f73"/>
-      <stop offset="100%" stop-color="#203b4f"/>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b6b84"/>
+      <stop offset="100%" stop-color="#27495f"/>
     </linearGradient>
+    <radialGradient id="moon" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d9f1ff" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#d9f1ff" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="1280" height="720" fill="url(#bg)"/>
-  <circle cx="220" cy="130" r="120" fill="rgba(255,255,255,0.06)"/>
-  <circle cx="1060" cy="170" r="180" fill="rgba(255,255,255,0.05)"/>
-  <rect x="0" y="420" width="1280" height="300" fill="url(#floor)"/>
-  <path d="M0 460 L1280 500" stroke="rgba(255,255,255,0.1)" stroke-width="2"/>
-  <path d="M0 520 L1280 560" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <circle cx="210" cy="120" r="100" fill="url(#moon)"/>
+  <circle cx="1030" cy="165" r="130" fill="url(#moon)" opacity="0.65"/>
+  <rect x="0" y="410" width="1280" height="310" fill="url(#ground)"/>
+  <path d="M0 454 C180 420 360 500 540 458 C720 416 900 486 1080 454 C1160 440 1230 444 1280 452" fill="none" stroke="rgba(210,236,255,0.22)" stroke-width="3"/>
+  <path d="M0 530 C210 560 420 520 640 552 C860 584 1060 536 1280 564" fill="none" stroke="rgba(210,236,255,0.14)" stroke-width="2"/>
+  <ellipse cx="640" cy="520" rx="440" ry="64" fill="rgba(8,20,28,0.35)"/>
 </svg>

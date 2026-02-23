@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <rect width="640" height="360" fill="#223a2b"/>
-  <polygon points="320,56 220,190 420,190" fill="#2d6d43"/>
-  <circle cx="320" cy="230" r="74" fill="#4d9a66"/>
-  <circle cx="292" cy="218" r="8" fill="#fff"/>
-  <circle cx="348" cy="218" r="8" fill="#fff"/>
-  <rect x="294" y="246" width="52" height="24" rx="6" fill="#233a2d"/>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#163022"/><stop offset="100%" stop-color="#2f6e4b"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <ellipse cx="320" cy="294" rx="164" ry="30" fill="rgba(0,0,0,0.28)"/>
+  <polygon points="320,54 220,188 420,188" fill="#368457"/>
+  <circle cx="320" cy="228" r="78" fill="#5db27b"/>
+  <circle cx="290" cy="218" r="9" fill="#fff"/><circle cx="350" cy="218" r="9" fill="#fff"/>
+  <circle cx="290" cy="218" r="4" fill="#132718"/><circle cx="350" cy="218" r="4" fill="#132718"/>
+  <rect x="292" y="246" width="56" height="28" rx="7" fill="#244536"/>
 </svg>

@@ -1,12 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <rect width="640" height="360" fill="#1f2a44"/>
-  <circle cx="320" cy="180" r="110" fill="#3e4d78"/>
-  <polygon points="255,110 292,160 235,160" fill="#6f84bd"/>
-  <polygon points="385,110 348,160 405,160" fill="#6f84bd"/>
-  <ellipse cx="320" cy="200" rx="85" ry="65" fill="#90a4dc"/>
-  <circle cx="285" cy="185" r="10" fill="#fff"/>
-  <circle cx="355" cy="185" r="10" fill="#fff"/>
-  <circle cx="285" cy="185" r="4" fill="#111"/>
-  <circle cx="355" cy="185" r="4" fill="#111"/>
-  <polygon points="320,205 300,235 340,235" fill="#2c375e"/>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#14243d"/>
+      <stop offset="100%" stop-color="#2e4676"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <ellipse cx="320" cy="286" rx="170" ry="36" fill="rgba(0,0,0,0.28)"/>
+  <polygon points="250,96 288,150 225,154" fill="#6d87c8"/>
+  <polygon points="390,96 352,150 415,154" fill="#6d87c8"/>
+  <ellipse cx="320" cy="214" rx="108" ry="82" fill="#95abe3"/>
+  <path d="M230 206 Q320 126 410 206" fill="none" stroke="#748ecf" stroke-width="18" stroke-linecap="round"/>
+  <circle cx="282" cy="196" r="13" fill="#fff"/>
+  <circle cx="358" cy="196" r="13" fill="#fff"/>
+  <circle cx="282" cy="196" r="5" fill="#0d1527"/>
+  <circle cx="358" cy="196" r="5" fill="#0d1527"/>
+  <path d="M320 216 L296 244 L344 244 Z" fill="#263754"/>
 </svg>

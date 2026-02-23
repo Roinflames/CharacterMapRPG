@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">
-  <rect width="640" height="360" fill="#4d1f1f"/>
-  <polygon points="320,56 390,150 250,150" fill="#c54949"/>
-  <ellipse cx="320" cy="220" rx="132" ry="88" fill="#e05e5e"/>
-  <circle cx="276" cy="206" r="13" fill="#fff"/>
-  <circle cx="364" cy="206" r="13" fill="#fff"/>
-  <circle cx="276" cy="206" r="5" fill="#2b1313"/>
-  <circle cx="364" cy="206" r="5" fill="#2b1313"/>
-  <polygon points="320,226 298,264 342,264" fill="#7b2d2d"/>
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3b1414"/><stop offset="100%" stop-color="#7e2727"/></linearGradient></defs>
+  <rect width="640" height="360" fill="url(#bg)"/>
+  <ellipse cx="320" cy="295" rx="176" ry="32" fill="rgba(0,0,0,0.3)"/>
+  <polygon points="320,56 398,162 242,162" fill="#d95656"/>
+  <ellipse cx="320" cy="226" rx="140" ry="90" fill="#ea6b6b"/>
+  <path d="M180 226 Q320 122 460 226" fill="none" stroke="#c84b4b" stroke-width="20"/>
+  <circle cx="274" cy="206" r="14" fill="#fff"/><circle cx="366" cy="206" r="14" fill="#fff"/>
+  <circle cx="274" cy="206" r="5" fill="#341212"/><circle cx="366" cy="206" r="5" fill="#341212"/>
+  <polygon points="320,230 296,270 344,270" fill="#892f2f"/>
 </svg>

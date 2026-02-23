@@ -66,8 +66,7 @@ const ARMORS = [
 const LOOT_TABLE = ["potion", "potion", "bomb", "elixir"];
 const ROUTE_ORDER = ["route1", "route2"];
 const COMBAT_SCENE_ASSET = "assets/combat/arena.svg";
-const processedEnemyAssetCache = new Map();
-let activeEncounterVisualToken = 0;
+const ENEMY_PORTRAIT_CACHE = new Map();
 const ENEMY_ASSETS = {
   "Lobo Sombrio": "assets/enemies/lobo-sombrio.webp",
   "Bandido del Valle": "assets/enemies/bandido-del-valle.webp",
@@ -195,7 +194,6 @@ function setCombatModalOpen(isOpen) {
   encounterPanel.classList.toggle("hidden", !isOpen);
   combatBackdrop.classList.toggle("hidden", !isOpen);
   if (!isOpen) {
-    activeEncounterVisualToken += 1;
     resetSceneParallax();
     encounterPanel.removeAttribute("data-faction");
     encounterPanel.removeAttribute("data-race");
@@ -253,61 +251,177 @@ function getEnemyAssetWithFallback(enemyName) {
   return { primary, fallback };
 }
 
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`No se pudo cargar imagen: ${src}`));
-    img.src = src;
-  });
+function hashString(text) {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
 }
 
-async function buildProcessedEnemyAsset(src) {
-  const image = await loadImage(src);
+function makeRng(seed) {
+  let t = seed >>> 0;
+  return () => {
+    t += 0x6d2b79f5;
+    let x = Math.imul(t ^ (t >>> 15), 1 | t);
+    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function fillRoundRect(ctx2d, x, y, width, height, radius) {
+  const r = Math.max(0, Math.min(radius, width / 2, height / 2));
+  ctx2d.beginPath();
+  ctx2d.moveTo(x + r, y);
+  ctx2d.lineTo(x + width - r, y);
+  ctx2d.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx2d.lineTo(x + width, y + height - r);
+  ctx2d.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx2d.lineTo(x + r, y + height);
+  ctx2d.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx2d.lineTo(x, y + r);
+  ctx2d.quadraticCurveTo(x, y, x + r, y);
+  ctx2d.closePath();
+  ctx2d.fill();
+}
+
+function drawEnemyPortrait(milestone) {
+  const raceKey = milestone.race || "humano";
+  const race = getRaceMeta(raceKey);
+  const style = race.style || "fisico";
+  const cacheKey = `${milestone.enemy}|${raceKey}|${style}`;
+  if (ENEMY_PORTRAIT_CACHE.has(cacheKey)) return ENEMY_PORTRAIT_CACHE.get(cacheKey);
+
+  const paletteByRace = {
+    humano: { base: "#8a2e3a", shade: "#4f1a22", skin: "#e88a95", accent: "#f4bf56" },
+    elfo: { base: "#1e5f4b", shade: "#123a2e", skin: "#8ad9ba", accent: "#6ef7ce" },
+    enano: { base: "#7b4730", shade: "#4e2d1f", skin: "#cf9d70", accent: "#f2c078" },
+    orco: { base: "#355a1d", shade: "#223813", skin: "#8fbe4b", accent: "#d6f26d" },
+    draconico: { base: "#7f2f12", shade: "#4a1b0a", skin: "#d98a5b", accent: "#ff9f4a" },
+    umbrio: { base: "#4a286a", shade: "#281439", skin: "#a88bdc", accent: "#d3a6ff" },
+    celestial: { base: "#1d4f78", shade: "#103049", skin: "#87c6e8", accent: "#9cecff" },
+  };
+
+  const palette = paletteByRace[raceKey] || paletteByRace.humano;
+  const seed = hashString(cacheKey);
+  const rand = makeRng(seed);
+
   const canvasEl = document.createElement("canvas");
-  canvasEl.width = image.naturalWidth;
-  canvasEl.height = image.naturalHeight;
+  canvasEl.width = 640;
+  canvasEl.height = 360;
   const ctx2d = canvasEl.getContext("2d");
-  if (!ctx2d) return src;
+  if (!ctx2d) return COMBAT_SCENE_ASSET;
 
-  ctx2d.drawImage(image, 0, 0);
-  const frame = ctx2d.getImageData(0, 0, canvasEl.width, canvasEl.height);
-  const px = frame.data;
+  const bg = ctx2d.createLinearGradient(0, 0, 640, 360);
+  bg.addColorStop(0, palette.shade);
+  bg.addColorStop(1, palette.base);
+  ctx2d.fillStyle = bg;
+  ctx2d.fillRect(0, 0, 640, 360);
 
-  for (let i = 0; i < px.length; i += 4) {
-    const r = px[i];
-    const g = px[i + 1];
-    const b = px[i + 2];
-    const a = px[i + 3];
-    const minRGB = Math.min(r, g, b);
-    const maxRGB = Math.max(r, g, b);
-    const spread = maxRGB - minRGB;
-    const isNearWhite = minRGB > 238 && spread < 16;
-    const isSoftWhite = minRGB > 220 && spread < 24;
-
-    if (isNearWhite) {
-      px[i + 3] = 0;
-      continue;
-    }
-    if (isSoftWhite) {
-      px[i + 3] = Math.round(a * 0.18);
-      continue;
-    }
-
-    px[i] = Math.min(255, Math.round(r * 1.04));
-    px[i + 1] = Math.min(255, Math.round(g * 1.02));
-    px[i + 2] = Math.min(255, Math.round(b * 1.02));
+  for (let i = 0; i < 8; i += 1) {
+    const x = rand() * 640;
+    const y = rand() * 360;
+    const radius = 40 + rand() * 140;
+    const glow = ctx2d.createRadialGradient(x, y, 6, x, y, radius);
+    glow.addColorStop(0, `${palette.accent}55`);
+    glow.addColorStop(1, `${palette.accent}00`);
+    ctx2d.fillStyle = glow;
+    ctx2d.fillRect(x - radius, y - radius, radius * 2, radius * 2);
   }
 
-  ctx2d.putImageData(frame, 0, 0);
-  return canvasEl.toDataURL("image/webp", 0.92);
-}
+  ctx2d.fillStyle = "rgba(0,0,0,0.28)";
+  ctx2d.beginPath();
+  ctx2d.ellipse(320, 300, 180, 36, 0, 0, Math.PI * 2);
+  ctx2d.fill();
 
-function getProcessedEnemyAsset(src) {
-  if (processedEnemyAssetCache.has(src)) return processedEnemyAssetCache.get(src);
-  const resultPromise = buildProcessedEnemyAsset(src).catch(() => src);
-  processedEnemyAssetCache.set(src, resultPromise);
-  return resultPromise;
+  ctx2d.fillStyle = palette.skin;
+  ctx2d.beginPath();
+  ctx2d.ellipse(320, 208, 112, 94, 0, 0, Math.PI * 2);
+  ctx2d.fill();
+
+  ctx2d.fillStyle = palette.base;
+  fillRoundRect(ctx2d, 236, 98, 168, 28, 10);
+
+  if (style === "fisico") {
+    ctx2d.fillStyle = "rgba(20, 24, 30, 0.82)";
+    fillRoundRect(ctx2d, 246, 124, 148, 38, 12);
+  } else {
+    ctx2d.strokeStyle = `${palette.accent}cc`;
+    ctx2d.lineWidth = 4;
+    ctx2d.beginPath();
+    ctx2d.arc(320, 142, 64, 0, Math.PI * 2);
+    ctx2d.stroke();
+  }
+
+  if ((milestone.enemy || "").toLowerCase().includes("lobo") || raceKey === "umbrio") {
+    ctx2d.fillStyle = palette.skin;
+    ctx2d.beginPath();
+    ctx2d.moveTo(248, 128);
+    ctx2d.lineTo(286, 78);
+    ctx2d.lineTo(298, 138);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.moveTo(392, 128);
+    ctx2d.lineTo(354, 78);
+    ctx2d.lineTo(342, 138);
+    ctx2d.closePath();
+    ctx2d.fill();
+  }
+
+  ctx2d.fillStyle = "#ffffff";
+  ctx2d.beginPath();
+  ctx2d.ellipse(286, 198, 14, 12, 0, 0, Math.PI * 2);
+  ctx2d.ellipse(354, 198, 14, 12, 0, 0, Math.PI * 2);
+  ctx2d.fill();
+  ctx2d.fillStyle = "#0e1116";
+  ctx2d.beginPath();
+  ctx2d.ellipse(286, 198, 6, 6, 0, 0, Math.PI * 2);
+  ctx2d.ellipse(354, 198, 6, 6, 0, 0, Math.PI * 2);
+  ctx2d.fill();
+
+  ctx2d.fillStyle = style === "fisico" ? "#f4e6c5" : "#d8f0ff";
+  fillRoundRect(ctx2d, 272, 232, 96, 54, 14);
+
+  if (style === "magico") {
+    ctx2d.strokeStyle = `${palette.accent}cc`;
+    ctx2d.lineWidth = 3;
+    for (let i = 0; i < 3; i += 1) {
+      const radius = 24 + i * 10;
+      ctx2d.beginPath();
+      ctx2d.arc(320, 214, radius, 0.2, Math.PI - 0.2);
+      ctx2d.stroke();
+    }
+  } else {
+    ctx2d.fillStyle = `${palette.shade}cc`;
+    ctx2d.beginPath();
+    ctx2d.moveTo(250, 266);
+    ctx2d.lineTo(212, 304);
+    ctx2d.lineTo(276, 304);
+    ctx2d.closePath();
+    ctx2d.fill();
+    ctx2d.beginPath();
+    ctx2d.moveTo(390, 266);
+    ctx2d.lineTo(364, 304);
+    ctx2d.lineTo(428, 304);
+    ctx2d.closePath();
+    ctx2d.fill();
+  }
+
+  ctx2d.strokeStyle = "rgba(255,255,255,0.18)";
+  ctx2d.lineWidth = 2;
+  for (let i = 0; i < 4; i += 1) {
+    const y = 42 + i * 72 + rand() * 18;
+    ctx2d.beginPath();
+    ctx2d.moveTo(0, y);
+    ctx2d.bezierCurveTo(180, y - 20, 460, y + 20, 640, y - 4);
+    ctx2d.stroke();
+  }
+
+  const data = canvasEl.toDataURL("image/webp", 0.92);
+  ENEMY_PORTRAIT_CACHE.set(cacheKey, data);
+  return data;
 }
 
 function getRaceBadgeHTML(raceKey) {
@@ -860,27 +974,18 @@ function startEncounter(milestone) {
   if (combatSceneFrontElement) combatSceneFrontElement.src = COMBAT_SCENE_ASSET;
   resetSceneParallax();
   const enemyAsset = getEnemyAssetWithFallback(milestone.enemy);
-  const visualToken = activeEncounterVisualToken + 1;
-  activeEncounterVisualToken = visualToken;
-  applyEnemyPortraitBackdrop(enemyAsset.primary);
+  let portraitSource = drawEnemyPortrait(milestone);
+  if (!portraitSource) {
+    portraitSource = enemyAsset.primary;
+  }
+  applyEnemyPortraitBackdrop(portraitSource);
   enemyImageElement.onerror = () => {
     enemyImageElement.onerror = null;
     applyEnemyPortraitBackdrop(enemyAsset.fallback);
     enemyImageElement.src = enemyAsset.fallback;
   };
-  enemyImageElement.src = enemyAsset.primary;
+  enemyImageElement.src = portraitSource;
   enemyImageElement.alt = `Retrato de ${milestone.enemy}`;
-  getProcessedEnemyAsset(enemyAsset.primary).then((processedSrc) => {
-    if (visualToken !== activeEncounterVisualToken) return;
-    if (!state.activeEncounter || state.activeEncounter.milestone.id !== milestone.id) return;
-    applyEnemyPortraitBackdrop(processedSrc);
-    enemyImageElement.onerror = () => {
-      enemyImageElement.onerror = null;
-      applyEnemyPortraitBackdrop(enemyAsset.fallback);
-      enemyImageElement.src = enemyAsset.fallback;
-    };
-    enemyImageElement.src = processedSrc;
-  });
   setCombatModalOpen(true);
   setCombatTurn("player");
   setCombatControlsEnabled(true);

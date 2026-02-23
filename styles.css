@@ -293,7 +293,6 @@ canvas {
   object-position: center 46%;
   border-radius: 12px;
   border: 1px solid rgba(132, 220, 255, 0.78);
-  margin-bottom: 0.75rem;
   background:
     radial-gradient(circle at 50% 52%, rgba(7, 17, 24, 0.58), rgba(6, 14, 21, 0.86)),
     linear-gradient(180deg, rgba(9, 20, 30, 0.68), rgba(6, 16, 24, 0.9));
@@ -306,6 +305,15 @@ canvas {
   transition: transform 180ms ease-out;
   position: relative;
   z-index: 4;
+}
+
+.enemy-breath-layer {
+  margin-bottom: 0.75rem;
+  transform-origin: center 68%;
+}
+
+.encounter-modal:not(.hidden) .enemy-breath-layer {
+  animation: enemyBreath 2.6s ease-in-out infinite;
 }
 
 .enemy-frame {
@@ -717,6 +725,12 @@ button:active {
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
+@keyframes enemyBreath {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(2px) scale(1.012); }
+  100% { transform: translateY(0) scale(1); }
+}
+
 @keyframes raceFramePulse {
   0% {
     opacity: 0.34;
@@ -754,6 +768,7 @@ button:active {
   .encounter-modal::before,
   .enemy-frame::before,
   .enemy-depth-layer,
+  .enemy-breath-layer,
   .scene-front {
     animation: none;
   }

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Character Map</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="panel">
+        <h1>Character Map</h1>
+        <p>Muévete con <strong>WASD</strong> o <strong>flechas</strong> hasta la meta dorada.</p>
+        <p class="version">UI v0.1.0</p>
+      </section>
+
+      <section class="game-shell" aria-label="Mapa del juego">
+        <canvas id="game" width="640" height="352"></canvas>
+      </section>
+
+      <section class="controls" aria-label="Controles táctiles">
+        <button data-dir="up" aria-label="Mover arriba">▲</button>
+        <div>
+          <button data-dir="left" aria-label="Mover izquierda">◀</button>
+          <button data-dir="down" aria-label="Mover abajo">▼</button>
+          <button data-dir="right" aria-label="Mover derecha">▶</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="main.js"></script>
+  </body>
+</html>

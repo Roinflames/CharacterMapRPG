@@ -1,6 +1,15 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+const statusElement = document.getElementById("milestones-status");
+const messageElement = document.getElementById("milestone-message");
+const encounterPanel = document.getElementById("encounter-panel");
+const enemyNameElement = document.getElementById("enemy-name");
+const combatStatsElement = document.getElementById("combat-stats");
+const battleLogElement = document.getElementById("battle-log");
+const attackButton = document.getElementById("attack-btn");
+const healButton = document.getElementById("heal-btn");
+
 const TILE = 32;
 const MAP = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
@@ -16,7 +25,31 @@ const MAP = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 ];
 
-const player = { x: 1, y: 1, won: false };
+const milestones = [
+  { id: "m1", x: 4, y: 1, enemy: "Lobo Sombrio", hp: 12, completed: false },
+  { id: "m2", x: 8, y: 5, enemy: "Bandido del Valle", hp: 14, completed: false },
+  { id: "m3", x: 13, y: 7, enemy: "Guardian de Piedra", hp: 16, completed: false },
+  { id: "m4", x: 17, y: 9, enemy: "Capitan del Portal", hp: 18, completed: false },
+];
+
+const player = { x: 1, y: 1, hp: 24, maxHp: 24, won: false };
+const state = { activeEncounter: null };
+
+function resetRun() {
+  player.x = 1;
+  player.y = 1;
+  player.hp = player.maxHp;
+  player.won = false;
+  state.activeEncounter = null;
+
+  milestones.forEach((milestone) => {
+    milestone.completed = false;
+  });
+
+  encounterPanel.classList.add("hidden");
+  messageElement.textContent = "Ruta reiniciada. Vuelve a intentarlo.";
+  updateStatus();
+}
 
 function canMove(nextX, nextY) {
   if (nextY < 0 || nextY >= MAP.length) return false;
@@ -24,8 +57,74 @@ function canMove(nextX, nextY) {
   return MAP[nextY][nextX] !== 1;
 }
 
+function getMilestoneAt(x, y) {
+  return milestones.find((milestone) => milestone.x === x && milestone.y === y);
+}
+
+function updateStatus() {
+  const completed = milestones.filter((milestone) => milestone.completed).length;
+  statusElement.textContent = `Hitos: ${completed}/${milestones.length} | HP: ${player.hp}/${player.maxHp}`;
+}
+
+function updateCombatStats() {
+  if (!state.activeEncounter) return;
+  combatStatsElement.textContent = `HP jugador: ${player.hp}/${player.maxHp} | HP enemigo: ${state.activeEncounter.hp}`;
+}
+
+function endEncounterWithVictory() {
+  const milestone = state.activeEncounter.milestone;
+  milestone.completed = true;
+  state.activeEncounter = null;
+  encounterPanel.classList.add("hidden");
+  messageElement.textContent = `Hito superado: ${milestone.enemy}`;
+  updateStatus();
+}
+
+function enemyTurn() {
+  if (!state.activeEncounter) return;
+
+  const damage = Math.floor(Math.random() * 4) + 2;
+  player.hp = Math.max(0, player.hp - damage);
+
+  if (player.hp <= 0) {
+    battleLogElement.textContent = `Recibiste ${damage}. Has caido.`;
+    resetRun();
+    return;
+  }
+
+  battleLogElement.textContent = `El enemigo contraataca y hace ${damage} de dano.`;
+  updateCombatStats();
+  updateStatus();
+}
+
+function startEncounter(milestone) {
+  state.activeEncounter = {
+    milestone,
+    hp: milestone.hp,
+  };
+
+  encounterPanel.classList.remove("hidden");
+  enemyNameElement.textContent = `Enfrentamiento: ${milestone.enemy}`;
+  battleLogElement.textContent = "Tu turno: Ataca o curate.";
+  updateCombatStats();
+}
+
+function tryFinishMap() {
+  if (MAP[player.y][player.x] !== 2) return;
+
+  const completedAll = milestones.every((milestone) => milestone.completed);
+
+  if (completedAll) {
+    player.won = true;
+    messageElement.textContent = "Victoria total. Derrotaste todos los hitos.";
+    return;
+  }
+
+  messageElement.textContent = "La meta final esta sellada. Completa todos los hitos.";
+}
+
 function move(dx, dy) {
-  if (player.won) return;
+  if (player.won || state.activeEncounter) return;
 
   const nextX = player.x + dx;
   const nextY = player.y + dy;
@@ -35,9 +134,13 @@ function move(dx, dy) {
   player.x = nextX;
   player.y = nextY;
 
-  if (MAP[player.y][player.x] === 2) {
-    player.won = true;
+  const milestone = getMilestoneAt(player.x, player.y);
+  if (milestone && !milestone.completed) {
+    messageElement.textContent = `Hito detectado: ${milestone.enemy}`;
+    startEncounter(milestone);
   }
+
+  tryFinishMap();
 }
 
 function drawTile(tile, x, y) {
@@ -60,6 +163,22 @@ function drawTile(tile, x, y) {
   }
 }
 
+function drawMilestones() {
+  milestones.forEach((milestone) => {
+    const px = milestone.x * TILE;
+    const py = milestone.y * TILE;
+
+    ctx.fillStyle = milestone.completed ? "#54d38a" : "#ff5a5f";
+    ctx.beginPath();
+    ctx.moveTo(px + TILE / 2, py + 6);
+    ctx.lineTo(px + TILE - 6, py + TILE / 2);
+    ctx.lineTo(px + TILE / 2, py + TILE - 6);
+    ctx.lineTo(px + 6, py + TILE / 2);
+    ctx.closePath();
+    ctx.fill();
+  });
+}
+
 function drawPlayer() {
   const px = player.x * TILE + TILE / 2;
   const py = player.y * TILE + TILE / 2;
@@ -79,13 +198,13 @@ function drawPlayer() {
 function drawWinMessage() {
   if (!player.won) return;
 
-  ctx.fillStyle = "rgba(11, 29, 38, 0.8)";
+  ctx.fillStyle = "rgba(11, 29, 38, 0.85)";
   ctx.fillRect(0, canvas.height / 2 - 36, canvas.width, 72);
 
   ctx.fillStyle = "#ffd166";
   ctx.font = "700 28px 'Trebuchet MS', sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText("Meta alcanzada", canvas.width / 2, canvas.height / 2 + 10);
+  ctx.fillText("Ruta completada", canvas.width / 2, canvas.height / 2 + 10);
 }
 
 function render() {
@@ -95,10 +214,39 @@ function render() {
     }
   }
 
+  drawMilestones();
   drawPlayer();
   drawWinMessage();
   requestAnimationFrame(render);
 }
+
+attackButton.addEventListener("click", () => {
+  if (!state.activeEncounter) return;
+
+  const damage = Math.floor(Math.random() * 5) + 4;
+  state.activeEncounter.hp = Math.max(0, state.activeEncounter.hp - damage);
+
+  if (state.activeEncounter.hp <= 0) {
+    battleLogElement.textContent = `Golpe de ${damage}. Enemigo derrotado.`;
+    endEncounterWithVictory();
+    return;
+  }
+
+  battleLogElement.textContent = `Golpe de ${damage}. El enemigo sigue en pie.`;
+  updateCombatStats();
+  enemyTurn();
+});
+
+healButton.addEventListener("click", () => {
+  if (!state.activeEncounter) return;
+
+  const heal = Math.floor(Math.random() * 4) + 3;
+  player.hp = Math.min(player.maxHp, player.hp + heal);
+  battleLogElement.textContent = `Te curas ${heal} puntos.`;
+  updateCombatStats();
+  updateStatus();
+  enemyTurn();
+});
 
 window.addEventListener("keydown", (event) => {
   const key = event.key.toLowerCase();
@@ -108,11 +256,7 @@ window.addEventListener("keydown", (event) => {
   if (key === "arrowleft" || key === "a") move(-1, 0);
   if (key === "arrowright" || key === "d") move(1, 0);
 
-  if (key === "r") {
-    player.x = 1;
-    player.y = 1;
-    player.won = false;
-  }
+  if (key === "r") resetRun();
 });
 
 document.querySelectorAll("button[data-dir]").forEach((button) => {
@@ -125,4 +269,5 @@ document.querySelectorAll("button[data-dir]").forEach((button) => {
   });
 });
 
+updateStatus();
 render();

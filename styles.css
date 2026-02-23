@@ -4,9 +4,7 @@
   --surface: rgba(255, 255, 255, 0.1);
   --text: #f5f4ef;
   --accent: #ffd166;
-  --wall: #1e2e3a;
-  --ground-a: #2a4f62;
-  --ground-b: #315f76;
+  --danger: #ff5a5f;
 }
 
 * {
@@ -33,7 +31,9 @@ body {
   gap: 1rem;
 }
 
-.panel {
+.panel,
+.game-shell,
+.encounter {
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: 12px;
@@ -50,6 +50,17 @@ body {
   margin: 0;
 }
 
+.status {
+  margin-top: 0.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.status-message {
+  margin-top: 0.35rem;
+  min-height: 1.2rem;
+}
+
 .version {
   margin-top: 0.5rem;
   color: var(--accent);
@@ -57,9 +68,6 @@ body {
 }
 
 .game-shell {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 14px;
   padding: 0.6rem;
 }
 
@@ -68,6 +76,31 @@ canvas {
   height: auto;
   display: block;
   border-radius: 8px;
+}
+
+.encounter h2 {
+  margin: 0;
+  color: #ffb3b5;
+}
+
+#combat-stats {
+  margin: 0.45rem 0 0;
+  font-weight: 700;
+}
+
+#battle-log {
+  margin: 0.45rem 0 0;
+  min-height: 1.3rem;
+}
+
+.encounter-actions {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.hidden {
+  display: none;
 }
 
 .controls {
@@ -91,12 +124,23 @@ button {
   min-height: 52px;
 }
 
-button:active {
-  transform: scale(0.98);
+#attack-btn,
+#heal-btn {
+  min-width: 120px;
+  min-height: 44px;
+  font-size: 1rem;
 }
 
-@media (min-width: 700px) {
-  .controls {
-    width: fit-content;
-  }
+#attack-btn {
+  background: rgba(255, 90, 95, 0.25);
+  border-color: rgba(255, 90, 95, 0.65);
+}
+
+#heal-btn {
+  background: rgba(42, 157, 143, 0.25);
+  border-color: rgba(42, 157, 143, 0.65);
+}
+
+button:active {
+  transform: scale(0.98);
 }

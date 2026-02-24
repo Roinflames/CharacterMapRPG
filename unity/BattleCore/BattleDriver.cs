@@ -8,8 +8,8 @@ namespace CharacterMapRPG.BattleCore
     public sealed class BattleDriver : MonoBehaviour
     {
         [Header("Setup")]
-        [SerializeField] private string encounterId = "lvl3_boss_portal";
-        [SerializeField] private bool isBossEncounter = true;
+        [SerializeField] private string encounterId = "r1m1";
+        [SerializeField] private bool isBossEncounter = false;
         [SerializeField] private List<EncounterDefinition> encounterDefinitions = new List<EncounterDefinition>();
         [SerializeField] private FighterStats playerStats = new FighterStats
         {
@@ -24,13 +24,13 @@ namespace CharacterMapRPG.BattleCore
         };
         [SerializeField] private FighterStats enemyStats = new FighterStats
         {
-            Id = "senor_portal",
-            MaxHp = 42,
-            CurrentHp = 42,
-            Atk = 11,
-            Def = 7,
+            Id = "lobo_sombrio",
+            MaxHp = 26,
+            CurrentHp = 26,
+            Atk = 8,
+            Def = 3,
             CritThreshold = 19,
-            HealPower = 6,
+            HealPower = 4,
             EscapeChance = 0f
         };
 
@@ -43,9 +43,17 @@ namespace CharacterMapRPG.BattleCore
         [SerializeField] private Text combatLogText;
         [SerializeField] private Image playerHpFillImage;
         [SerializeField] private Image enemyHpFillImage;
+        [SerializeField] private RawImage playerPortraitImage;
+        [SerializeField] private RawImage enemyPortraitImage;
+        [SerializeField] private RectTransform playerPortraitRoot;
+        [SerializeField] private RectTransform enemyPortraitRoot;
         [SerializeField] private Button attackButton;
         [SerializeField] private Button healButton;
         [SerializeField] private Button escapeButton;
+        [SerializeField] private Button styleButton;
+        [SerializeField] private Text styleText;
+        [SerializeField] private PortraitVisualStyle portraitStyle = PortraitVisualStyle.AssetPack;
+        [SerializeField] private bool allowDemoEncounterWithoutPending = false;
 
         private BattleEngine _engine;
         private BattleProgression _progression;
@@ -55,6 +63,10 @@ namespace CharacterMapRPG.BattleCore
         private Coroutine _playerHpAnim;
         private Coroutine _enemyHpAnim;
         private Coroutine _impactTextAnim;
+        private Coroutine _playerBreathAnim;
+        private Coroutine _enemyBreathAnim;
+        private Texture2D _playerPortraitTexture;
+        private Texture2D _enemyPortraitTexture;
 
         private void Awake()
         {
@@ -82,6 +94,13 @@ namespace CharacterMapRPG.BattleCore
                 encounterId = _session.PendingEncounterId;
                 _session.ClearPendingEncounter();
             }
+            else if (!allowDemoEncounterWithoutPending)
+            {
+                combatLogText.text = "Sin encuentro activo. Volviendo al mapa...";
+                SetButtonsInteractable(false);
+                StartCoroutine(ReturnToMapAfterDelay(0.15f));
+                return;
+            }
 
             _activeEncounter = ResolveEncounter(encounterId);
             encounterId = _activeEncounter.Id;
@@ -99,11 +118,13 @@ namespace CharacterMapRPG.BattleCore
             }
 
             _engine.Initialize(playerStats, enemyStats);
+            RefreshPortraits();
             RefreshUi();
             TryRefreshPreview();
             SetHpFillImmediate(playerHpFillImage, 1f);
             SetHpFillImmediate(enemyHpFillImage, 1f);
             SetButtonsInteractable(true);
+            UpdateStyleLabel();
             combatLogText.text = $"Encuentro: {_activeEncounter.DisplayName}";
         }
 
@@ -134,6 +155,14 @@ namespace CharacterMapRPG.BattleCore
             }
 
             StartCoroutine(RunPlayerAction(ActionType.Escape));
+        }
+
+        public void OnStylePressed()
+        {
+            portraitStyle = (PortraitVisualStyle)(((int)portraitStyle + 1) % 4);
+            UpdateStyleLabel();
+            RefreshPortraits();
+            AudioManager.Instance?.PlayUiClick();
         }
 
         private IEnumerator RunPlayerAction(ActionType action)
@@ -185,6 +214,7 @@ namespace CharacterMapRPG.BattleCore
                 combatLogText.text = "Enemigo derrotado.";
                 AudioManager.Instance?.PlayEnemyKo();
                 _session?.ResolveBattleResult(_activeEncounter, true, false);
+                StartCoroutine(FadeOutPortrait(enemyPortraitImage, 0.48f));
             }
             else
             {
@@ -203,6 +233,7 @@ namespace CharacterMapRPG.BattleCore
                     combatLogText.text = "Has sido derrotado.";
                     AudioManager.Instance?.PlayPlayerKo();
                     _session?.ResolveBattleResult(_activeEncounter, false, false);
+                    StartCoroutine(FadeOutPortrait(playerPortraitImage, 0.48f));
                 }
             }
 
@@ -262,6 +293,7 @@ namespace CharacterMapRPG.BattleCore
         {
             if (attackButton) attackButton.interactable = value;
             if (healButton) healButton.interactable = value;
+            if (styleButton) styleButton.interactable = value;
 
             bool escapeAllowedByEncounter = _activeEncounter == null || _activeEncounter.EscapeAllowed;
             bool canEscape = value && escapeAllowedByEncounter && _progression.CanEscapeEncounter(encounterId, isBossEncounter);
@@ -297,6 +329,22 @@ namespace CharacterMapRPG.BattleCore
             enemyHpFillImage = enemyFill;
         }
 
+        public void BindPortraits(RawImage playerPortrait, RawImage enemyPortrait, RectTransform playerRoot, RectTransform enemyRoot)
+        {
+            playerPortraitImage = playerPortrait;
+            enemyPortraitImage = enemyPortrait;
+            playerPortraitRoot = playerRoot;
+            enemyPortraitRoot = enemyRoot;
+        }
+
+        public void BindStyleUi(Button styleToggle, Text styleLabel)
+        {
+            styleButton = styleToggle;
+            styleText = styleLabel;
+            UpdateStyleLabel();
+            WireButtons();
+        }
+
         private void WireButtons()
         {
             if (attackButton)
@@ -313,6 +361,11 @@ namespace CharacterMapRPG.BattleCore
             {
                 escapeButton.onClick.RemoveListener(OnEscapePressed);
                 escapeButton.onClick.AddListener(OnEscapePressed);
+            }
+            if (styleButton)
+            {
+                styleButton.onClick.RemoveListener(OnStylePressed);
+                styleButton.onClick.AddListener(OnStylePressed);
             }
         }
 
@@ -403,10 +456,113 @@ namespace CharacterMapRPG.BattleCore
             };
         }
 
-        private static IEnumerator ReturnToMapAfterDelay()
+        private static IEnumerator ReturnToMapAfterDelay(float delay = 1.2f)
         {
-            yield return new WaitForSeconds(1.2f);
+            yield return new WaitForSeconds(delay);
             SceneFlow.LoadMapScene();
+        }
+
+        private void RefreshPortraits()
+        {
+            if (playerPortraitImage)
+            {
+                Texture2D loaded = PortraitAssetLibrary.TryLoad(playerStats.Id, true, portraitStyle);
+                if (loaded != null)
+                {
+                    if (_playerPortraitTexture) Destroy(_playerPortraitTexture);
+                    _playerPortraitTexture = null;
+                    playerPortraitImage.texture = loaded;
+                }
+                else
+                {
+                    if (_playerPortraitTexture) Destroy(_playerPortraitTexture);
+                    _playerPortraitTexture = PortraitPainter.CreatePortrait(playerStats.Id, true, portraitStyle);
+                    playerPortraitImage.texture = _playerPortraitTexture;
+                }
+                playerPortraitImage.color = Color.white;
+            }
+
+            if (enemyPortraitImage)
+            {
+                Texture2D loaded = PortraitAssetLibrary.TryLoad(enemyStats.Id, false, portraitStyle);
+                if (loaded != null)
+                {
+                    if (_enemyPortraitTexture) Destroy(_enemyPortraitTexture);
+                    _enemyPortraitTexture = null;
+                    enemyPortraitImage.texture = loaded;
+                }
+                else
+                {
+                    if (_enemyPortraitTexture) Destroy(_enemyPortraitTexture);
+                    _enemyPortraitTexture = PortraitPainter.CreatePortrait(enemyStats.Id, false, portraitStyle);
+                    enemyPortraitImage.texture = _enemyPortraitTexture;
+                }
+                enemyPortraitImage.color = Color.white;
+            }
+
+            if (playerPortraitRoot != null)
+            {
+                if (_playerBreathAnim != null) StopCoroutine(_playerBreathAnim);
+                _playerBreathAnim = StartCoroutine(Breathing(playerPortraitRoot, 1f, 0.014f, 0.16f));
+            }
+
+            if (enemyPortraitRoot != null)
+            {
+                if (_enemyBreathAnim != null) StopCoroutine(_enemyBreathAnim);
+                _enemyBreathAnim = StartCoroutine(Breathing(enemyPortraitRoot, 1f, 0.018f, 0.25f));
+            }
+        }
+
+        private static IEnumerator Breathing(RectTransform target, float baseScale, float amplitude, float phase)
+        {
+            while (target != null)
+            {
+                float t = Time.unscaledTime * 2f + phase;
+                float scale = baseScale + Mathf.Sin(t) * amplitude;
+                target.localScale = new Vector3(scale, scale, 1f);
+                yield return null;
+            }
+        }
+
+        private static IEnumerator FadeOutPortrait(RawImage image, float duration)
+        {
+            if (!image) yield break;
+            Color start = image.color;
+            float t = 0f;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float alpha = Mathf.Lerp(start.a, 0f, Mathf.Clamp01(t / duration));
+                image.color = new Color(start.r, start.g, start.b, alpha);
+                yield return null;
+            }
+            image.color = new Color(start.r, start.g, start.b, 0f);
+        }
+
+        private void OnDestroy()
+        {
+            if (_playerPortraitTexture) Destroy(_playerPortraitTexture);
+            if (_enemyPortraitTexture) Destroy(_enemyPortraitTexture);
+        }
+
+        private void UpdateStyleLabel()
+        {
+            if (!styleText) return;
+            switch (portraitStyle)
+            {
+                case PortraitVisualStyle.Classic:
+                    styleText.text = "Estilo: Clasico";
+                    break;
+                case PortraitVisualStyle.DarkIllustrated:
+                    styleText.text = "Estilo: Oscuro";
+                    break;
+                case PortraitVisualStyle.PixelRetro:
+                    styleText.text = "Estilo: Pixel";
+                    break;
+                case PortraitVisualStyle.AssetPack:
+                    styleText.text = "Estilo: Pack";
+                    break;
+            }
         }
     }
 }

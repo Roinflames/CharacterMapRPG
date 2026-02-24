@@ -26,6 +26,7 @@ namespace CharacterMapRPG.BattleCore
         private static readonly Color32 PlayerColor = new Color32(239, 71, 111, 255);
         private static readonly Color32 MilestonePendingColor = new Color32(255, 90, 95, 255);
         private static readonly Color32 MilestoneDoneColor = new Color32(84, 211, 138, 255);
+        private static readonly Color32 HealSpotColor = new Color32(78, 224, 255, 255);
 
         private void Start()
         {
@@ -158,6 +159,11 @@ namespace CharacterMapRPG.BattleCore
                 DrawDiamond(_mapTexture, milestone.Position.x, milestone.Position.y, tile, done ? MilestoneDoneColor : MilestonePendingColor);
             }
 
+            foreach (Vector2Int healSpot in route.HealSpots)
+            {
+                DrawCross(_mapTexture, healSpot.x, healSpot.y, tile, HealSpotColor);
+            }
+
             Vector2Int player = _session.GetPlayerPosition();
             DrawDisc(_mapTexture, player.x, player.y, tile, PlayerColor);
 
@@ -271,6 +277,34 @@ namespace CharacterMapRPG.BattleCore
                     int x = cx + dx;
                     int y = cy + dy;
                     if (x >= 0 && y >= 0 && x < tex.width && y < tex.height) tex.SetPixel(x, y, color);
+                }
+            }
+        }
+
+        private static void DrawCross(Texture2D tex, int cellX, int cellY, int tileSize, Color32 color)
+        {
+            int cx = cellX * tileSize + tileSize / 2;
+            int cy = tex.height - (cellY * tileSize + tileSize / 2);
+            int arm = Mathf.Max(3, tileSize / 4);
+            int thick = Mathf.Max(1, tileSize / 12);
+
+            for (int y = -arm; y <= arm; y += 1)
+            {
+                for (int x = -thick; x <= thick; x += 1)
+                {
+                    int px = cx + x;
+                    int py = cy + y;
+                    if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, color);
+                }
+            }
+
+            for (int y = -thick; y <= thick; y += 1)
+            {
+                for (int x = -arm; x <= arm; x += 1)
+                {
+                    int px = cx + x;
+                    int py = cy + y;
+                    if (px >= 0 && py >= 0 && px < tex.width && py < tex.height) tex.SetPixel(px, py, color);
                 }
             }
         }

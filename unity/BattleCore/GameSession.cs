@@ -92,7 +92,17 @@ namespace CharacterMapRPG.BattleCore
                 {
                     progression.MarkBossVictory(encounter.Id);
                 }
+                return;
             }
+
+            // On defeat: send player back to route start and restore HP so progression can continue.
+            RouteDefinition route = GetCurrentRoute();
+            if (route != null)
+            {
+                _routePositions[currentRouteId] = route.Start;
+                RespawnRouteEncounters(route);
+            }
+            playerStats.CurrentHp = playerStats.MaxHp;
         }
 
         public RouteDefinition GetCurrentRoute()
@@ -135,6 +145,21 @@ namespace CharacterMapRPG.BattleCore
 
             _routePositions[currentRouteId] = next;
 
+            foreach (var healSpot in route.HealSpots)
+            {
+                if (healSpot != next) continue;
+                if (playerStats.CurrentHp < playerStats.MaxHp)
+                {
+                    playerStats.CurrentHp = playerStats.MaxHp;
+                    message = "Santuario: HP restaurado al maximo.";
+                }
+                else
+                {
+                    message = "Santuario: ya tienes HP completo.";
+                }
+                break;
+            }
+
             foreach (var milestone in route.Milestones)
             {
                 if (milestone.Position == next && !IsEncounterCompleted(milestone.EncounterId))
@@ -174,10 +199,49 @@ namespace CharacterMapRPG.BattleCore
                     return true;
                 }
 
+                if (currentRouteId == "route2")
+                {
+                    if (!progression.Level3BossDefeated)
+                    {
+                        if (progression.Level < 3)
+                        {
+                            message = $"Te falta nivel para el jefe final. Requerido: nivel 3 (actual: {progression.Level}).";
+                            return true;
+                        }
+
+                        encounterId = progression.Level3BossEncounterId;
+                        message = "Jefe final desbloqueado: Senor del Portal.";
+                        return true;
+                    }
+
+                    message = "Has completado todas las rutas y derrotaste al jefe final.";
+                    return true;
+                }
+
                 message = "Has completado todas las rutas.";
             }
 
             return true;
+        }
+
+        private void RespawnRouteEncounters(RouteDefinition route)
+        {
+            if (route == null) return;
+            for (int i = completedEncounterIds.Count - 1; i >= 0; i -= 1)
+            {
+                string id = completedEncounterIds[i];
+                bool belongsToRoute = false;
+                for (int j = 0; j < route.Milestones.Count; j += 1)
+                {
+                    if (route.Milestones[j].EncounterId != id) continue;
+                    belongsToRoute = true;
+                    break;
+                }
+
+                if (!belongsToRoute) continue;
+                if (progression.IsBossEncounter(id)) continue;
+                completedEncounterIds.RemoveAt(i);
+            }
         }
 
         private void EnsureRoutes()

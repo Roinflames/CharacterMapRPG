@@ -16,7 +16,9 @@ namespace CharacterMapRPG.BattleCore
             }
 
             float hpRatio = (float)enemy.CurrentHp / enemy.MaxHp;
-            if (hpRatio < 0.35f)
+            bool lowHp = hpRatio < 0.22f;
+            bool behind = enemy.CurrentHp < player.CurrentHp;
+            if (lowHp && behind)
             {
                 return ActionType.Heal;
             }

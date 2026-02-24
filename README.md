@@ -1,6 +1,6 @@
-# Character Map (UI v0.27.9)
+# Character Map (UI v0.29.0)
 
-Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formacion de equipo.
+Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formación de equipo. Esta versión agrega el pipeline Unity para combate, retratos por asset pack y progresión con respawn de hitos.
 
 ## Correr local
 
@@ -35,8 +35,22 @@ Render Static Site:
 
 Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
+## Frente Unity (Battle Core)
+
+Se inicio la migracion de combate solido hacia Unity con soporte de canon externo:
+
+- Plan: `docs/world-anvil-unity-plan.md`
+- Plantilla de canon para World Anvil: `docs/world-anvil-template.md`
+- Battle Core inicial C#: `unity/BattleCore/`
+- Portrait pack de combate (Assets/Resources/Portraits/pack)
+- Generador de placeholders: `unity/BattleCore/Editor/PortraitPlaceholderGenerator.cs`
+- Pipeline de assets: `unity/BattleCore/PortraitAssetLibrary.cs` + `PortraitPainter.cs`
+- Control de progresión: respawn y bloqueo de jefe por nivel desde `GameSession.cs`
+- Retratos y encuentros se cargan en `BattleDriver.cs`
+
 ## Historial de versiones
 
+- `v0.28.0`: niebla de guerra en el mapa (vision limitada alrededor del jugador) y ocultamiento tactico de hitos/meta fuera de rango.
 - `v0.27.9`: al ganar, el retrato enemigo se desvanece completamente antes de cerrar el combate.
 - `v0.27.8`: al derrotar un enemigo, el retrato se ilumina y luego se difumina antes de cerrar el combate.
 - `v0.27.7`: foco visual en retrato enemigo (menos ruido encima del rostro) y mejora de legibilidad en la zona baja del modal.

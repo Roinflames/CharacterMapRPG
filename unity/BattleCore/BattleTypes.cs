@@ -94,12 +94,12 @@ namespace CharacterMapRPG.BattleCore
                     EnemyStats = new FighterStats
                     {
                         Id = "bandido_valle",
-                        MaxHp = 30,
-                        CurrentHp = 30,
-                        Atk = 9,
-                        Def = 4,
+                        MaxHp = 24,
+                        CurrentHp = 24,
+                        Atk = 7,
+                        Def = 2,
                         CritThreshold = 20,
-                        HealPower = 6,
+                        HealPower = 3,
                         EscapeChance = 0f
                     }
                 },

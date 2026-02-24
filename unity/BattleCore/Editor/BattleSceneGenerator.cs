@@ -50,33 +50,48 @@ namespace CharacterMapRPG.BattleCore.Editor
             Text title = CreateText(panel.transform, "TitleText", font, "Character Map RPG - Battle Core", 30, FontStyle.Bold, TextAnchor.UpperLeft);
             AnchorText(title.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20, -64), new Vector2(-20, -20));
 
+            Text styleLabel = CreateText(panel.transform, "StyleText", font, "Estilo: Pack", 18, FontStyle.Bold, TextAnchor.UpperRight);
+            styleLabel.color = new Color(0.76f, 0.90f, 1f, 1f);
+            AnchorText(styleLabel.rectTransform, new Vector2(0.66f, 1f), new Vector2(1f, 1f), new Vector2(0, -54), new Vector2(-148, -20));
+
+            Button styleButton = CreateButton(panel.transform, "StyleButton", font, "Cambiar", new Color(0.18f, 0.34f, 0.52f, 1f));
+            AnchorButton(styleButton.GetComponent<RectTransform>(), new Vector2(0.84f, 1f), new Vector2(1f, 1f), new Vector2(0, -56), new Vector2(-20, -20));
+
+            Image playerPortraitFrame = CreatePanel(panel.transform, "PlayerPortraitFrame", new Vector2(0f, 1f), new Vector2(0, 0), new Color(0.08f, 0.19f, 0.27f, 0.96f));
+            AnchorText(playerPortraitFrame.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(20, -196), new Vector2(-12, -70));
+            RawImage playerPortrait = CreatePortrait(playerPortraitFrame.transform, "PlayerPortrait", new Color(1f, 1f, 1f, 1f));
+
+            Image enemyPortraitFrame = CreatePanel(panel.transform, "EnemyPortraitFrame", new Vector2(1f, 1f), new Vector2(0, 0), new Color(0.16f, 0.12f, 0.16f, 0.96f));
+            AnchorText(enemyPortraitFrame.rectTransform, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(12, -196), new Vector2(-20, -70));
+            RawImage enemyPortrait = CreatePortrait(enemyPortraitFrame.transform, "EnemyPortrait", new Color(1f, 1f, 1f, 1f));
+
             Text playerHp = CreateText(panel.transform, "PlayerHpText", font, "HP jugador: --", 24, FontStyle.Bold, TextAnchor.UpperLeft);
-            AnchorText(playerHp.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(20, -130), new Vector2(-10, -90));
+            AnchorText(playerHp.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(20, -252), new Vector2(-10, -212));
             Image playerTrack = CreatePanel(panel.transform, "PlayerHpTrack", new Vector2(0f, 1f), new Vector2(0, 20), new Color(0.05f, 0.10f, 0.14f, 0.92f));
-            AnchorText(playerTrack.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(20, -158), new Vector2(-10, -140));
+            AnchorText(playerTrack.rectTransform, new Vector2(0f, 1f), new Vector2(0.5f, 1f), new Vector2(20, -280), new Vector2(-10, -262));
             Image playerFill = CreateFill(playerTrack.transform, "Fill", new Color(0.20f, 0.83f, 0.95f, 1f));
 
             Text enemyHp = CreateText(panel.transform, "EnemyHpText", font, "HP enemigo: --", 24, FontStyle.Bold, TextAnchor.UpperRight);
-            AnchorText(enemyHp.rectTransform, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(10, -130), new Vector2(-20, -90));
+            AnchorText(enemyHp.rectTransform, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(10, -252), new Vector2(-20, -212));
             Image enemyTrack = CreatePanel(panel.transform, "EnemyHpTrack", new Vector2(1f, 1f), new Vector2(0, 20), new Color(0.05f, 0.10f, 0.14f, 0.92f));
-            AnchorText(enemyTrack.rectTransform, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(10, -158), new Vector2(-20, -140));
+            AnchorText(enemyTrack.rectTransform, new Vector2(0.5f, 1f), new Vector2(1f, 1f), new Vector2(10, -280), new Vector2(-20, -262));
             Image enemyFill = CreateFill(enemyTrack.transform, "Fill", new Color(0.95f, 0.38f, 0.50f, 1f));
 
             Text turnText = CreateText(panel.transform, "TurnText", font, "Turno: --", 22, FontStyle.Bold, TextAnchor.UpperLeft);
-            AnchorText(turnText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20, -188), new Vector2(-20, -150));
+            AnchorText(turnText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20, -320), new Vector2(-20, -282));
 
             Text previewText = CreateText(panel.transform, "PreviewText", font, "Ataque previsto: --", 22, FontStyle.Normal, TextAnchor.UpperLeft);
             previewText.color = new Color(1f, 0.92f, 0.64f, 1f);
-            AnchorText(previewText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20, -234), new Vector2(-20, -196));
+            AnchorText(previewText.rectTransform, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20, -360), new Vector2(-20, -322));
 
             Text resultText = CreateText(panel.transform, "ResultText", font, "", 34, FontStyle.Bold, TextAnchor.MiddleCenter);
             resultText.color = new Color(1f, 0.84f, 0.36f, 1f);
-            AnchorText(resultText.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(20, -20), new Vector2(-20, 20));
+            AnchorText(resultText.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(20, -56), new Vector2(-20, -8));
 
             Text combatLog = CreateText(panel.transform, "CombatLogText", font, "Listo para combate.", 20, FontStyle.Normal, TextAnchor.UpperLeft);
             combatLog.horizontalOverflow = HorizontalWrapMode.Wrap;
             combatLog.verticalOverflow = VerticalWrapMode.Overflow;
-            AnchorText(combatLog.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(20, -180), new Vector2(-20, -38));
+            AnchorText(combatLog.rectTransform, new Vector2(0f, 0.5f), new Vector2(1f, 0.5f), new Vector2(20, -214), new Vector2(-20, -76));
 
             Button attackButton = CreateButton(panel.transform, "AttackButton", font, "Atacar", new Color(0.66f, 0.22f, 0.26f, 1f));
             AnchorButton(attackButton.GetComponent<RectTransform>(), new Vector2(0.12f, 0f), new Vector2(0.37f, 0f), new Vector2(0, 24), new Vector2(0, 82));
@@ -91,6 +106,8 @@ namespace CharacterMapRPG.BattleCore.Editor
             BattleDriver driver = driverGo.GetComponent<BattleDriver>();
             driver.BindUi(playerHp, enemyHp, turnText, previewText, resultText, combatLog, attackButton, healButton, escapeButton);
             driver.BindHpBars(playerFill, enemyFill);
+            driver.BindPortraits(playerPortrait, enemyPortrait, playerPortraitFrame.rectTransform, enemyPortraitFrame.rectTransform);
+            driver.BindStyleUi(styleButton, styleLabel);
             if (Object.FindFirstObjectByType<GameSession>() == null)
             {
                 new GameObject("GameSession", typeof(GameSession));
@@ -228,6 +245,20 @@ namespace CharacterMapRPG.BattleCore.Editor
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             return fill;
+        }
+
+        private static RawImage CreatePortrait(Transform parent, string name, Color tint)
+        {
+            GameObject go = new GameObject(name, typeof(RectTransform), typeof(RawImage));
+            go.transform.SetParent(parent, false);
+            RawImage raw = go.GetComponent<RawImage>();
+            raw.color = tint;
+            RectTransform rt = raw.rectTransform;
+            rt.anchorMin = new Vector2(0f, 0f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.offsetMin = new Vector2(10f, 10f);
+            rt.offsetMax = new Vector2(-10f, -10f);
+            return raw;
         }
 
         private static void AnchorText(RectTransform rt, Vector2 min, Vector2 max, Vector2 offsetMin, Vector2 offsetMax)

@@ -17,6 +17,7 @@ namespace CharacterMapRPG.BattleCore
         public Vector2Int Start;
         public int[][] Map;
         public List<RouteMilestone> Milestones = new List<RouteMilestone>();
+        public List<Vector2Int> HealSpots = new List<Vector2Int>();
 
         public int Width => Map != null && Map.Length > 0 ? Map[0].Length : 0;
         public int Height => Map?.Length ?? 0;
@@ -50,6 +51,7 @@ namespace CharacterMapRPG.BattleCore
             route1.Milestones.Add(new RouteMilestone { Id = "r1m2", EncounterId = "r1m2", Position = new Vector2Int(8, 5) });
             route1.Milestones.Add(new RouteMilestone { Id = "r1m3", EncounterId = "r1m3", Position = new Vector2Int(13, 7) });
             route1.Milestones.Add(new RouteMilestone { Id = "r1m4", EncounterId = "r1m4", Position = new Vector2Int(17, 9) });
+            route1.HealSpots.Add(new Vector2Int(5, 7));
 
             var route2 = new RouteDefinition
             {
@@ -76,6 +78,7 @@ namespace CharacterMapRPG.BattleCore
             route2.Milestones.Add(new RouteMilestone { Id = "r2m3", EncounterId = "r2m3", Position = new Vector2Int(11, 7) });
             route2.Milestones.Add(new RouteMilestone { Id = "r2m4", EncounterId = "r2m4", Position = new Vector2Int(15, 3) });
             route2.Milestones.Add(new RouteMilestone { Id = "r2m5", EncounterId = "r2m5", Position = new Vector2Int(17, 1) });
+            route2.HealSpots.Add(new Vector2Int(5, 9));
 
             return new Dictionary<string, RouteDefinition>
             {

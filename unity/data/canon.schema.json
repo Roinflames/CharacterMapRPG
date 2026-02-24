@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "character-map-rpg/canon.schema.json",
+  "title": "Character Map RPG Canon",
+  "type": "object",
+  "required": ["version", "races", "enemies", "routes", "encounters", "rules"],
+  "properties": {
+    "version": { "type": "string" },
+    "races": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "colorHex", "style", "faction"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "colorHex": { "type": "string", "pattern": "^#([A-Fa-f0-9]{6})$" },
+          "style": { "type": "string", "enum": ["fisico", "magico"] },
+          "faction": { "type": "string", "enum": ["cielo", "infierno", "neutral"] },
+          "dominateAll": { "type": "boolean" },
+          "hardToOccupy": { "type": "boolean" }
+        }
+      }
+    },
+    "enemies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "raceId", "role", "baseStats"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "raceId": { "type": "string" },
+          "role": { "type": "string", "enum": ["bruiser", "caster", "assassin", "tank", "support", "boss"] },
+          "baseStats": {
+            "type": "object",
+            "required": ["hp", "atk", "def", "speed"],
+            "properties": {
+              "hp": { "type": "integer", "minimum": 1 },
+              "atk": { "type": "integer", "minimum": 0 },
+              "def": { "type": "integer", "minimum": 0 },
+              "speed": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "recommendedLevel"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "recommendedLevel": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "encounters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "routeId", "order", "enemyId", "isBoss", "rewards", "rules"],
+        "properties": {
+          "id": { "type": "string" },
+          "routeId": { "type": "string" },
+          "order": { "type": "integer", "minimum": 1 },
+          "enemyId": { "type": "string" },
+          "isBoss": { "type": "boolean" },
+          "rewards": {
+            "type": "object",
+            "required": ["exp", "essence"],
+            "properties": {
+              "exp": { "type": "integer", "minimum": 0 },
+              "essence": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "rules": {
+            "type": "object",
+            "required": ["escapeAllowed"],
+            "properties": {
+              "escapeAllowed": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "required": ["level3Boss"],
+      "properties": {
+        "level3Boss": {
+          "type": "object",
+          "required": ["required", "encounterId", "escapeAllowed", "blocksProgress"],
+          "properties": {
+            "required": { "type": "boolean" },
+            "encounterId": { "type": "string" },
+            "escapeAllowed": { "type": "boolean" },
+            "blocksProgress": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

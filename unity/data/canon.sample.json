@@ -1,0 +1,60 @@
+{
+  "version": "unity-canon-v1",
+  "races": [
+    { "id": "humano", "name": "Humano", "colorHex": "#F59E0B", "style": "fisico", "faction": "cielo" },
+    { "id": "elfo", "name": "Elfo", "colorHex": "#10B981", "style": "magico", "faction": "cielo" },
+    { "id": "enano", "name": "Enano", "colorHex": "#EF4444", "style": "fisico", "faction": "cielo" },
+    { "id": "orco", "name": "Orco", "colorHex": "#84CC16", "style": "fisico", "faction": "infierno" },
+    { "id": "draconico", "name": "Draconico", "colorHex": "#F97316", "style": "magico", "faction": "infierno" },
+    { "id": "umbrio", "name": "Umbrio", "colorHex": "#A855F7", "style": "magico", "faction": "infierno", "dominateAll": true, "hardToOccupy": true },
+    { "id": "celestial", "name": "Celestial", "colorHex": "#22D3EE", "style": "magico", "faction": "cielo" }
+  ],
+  "enemies": [
+    {
+      "id": "bandido_valle",
+      "name": "Bandido del Valle",
+      "raceId": "humano",
+      "role": "bruiser",
+      "baseStats": { "hp": 24, "atk": 7, "def": 3, "speed": 5 }
+    },
+    {
+      "id": "senor_portal",
+      "name": "Senor del Portal",
+      "raceId": "celestial",
+      "role": "boss",
+      "baseStats": { "hp": 42, "atk": 11, "def": 7, "speed": 6 }
+    }
+  ],
+  "routes": [
+    { "id": "route1", "name": "Ruta 1", "recommendedLevel": 1 },
+    { "id": "route2", "name": "Ruta 2", "recommendedLevel": 3 }
+  ],
+  "encounters": [
+    {
+      "id": "r1m2",
+      "routeId": "route1",
+      "order": 2,
+      "enemyId": "bandido_valle",
+      "isBoss": false,
+      "rewards": { "exp": 20, "essence": 1 },
+      "rules": { "escapeAllowed": true }
+    },
+    {
+      "id": "lvl3_boss_portal",
+      "routeId": "route2",
+      "order": 1,
+      "enemyId": "senor_portal",
+      "isBoss": true,
+      "rewards": { "exp": 80, "essence": 3 },
+      "rules": { "escapeAllowed": false }
+    }
+  ],
+  "rules": {
+    "level3Boss": {
+      "required": true,
+      "encounterId": "lvl3_boss_portal",
+      "escapeAllowed": false,
+      "blocksProgress": true
+    }
+  }
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 432" role="img" aria-label="Emblema Soberano del Abismo">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="76%">
+      <stop offset="0" stop-color="#31154f"/>
+      <stop offset="1" stop-color="#06070e"/>
+    </radialGradient>
+    <linearGradient id="crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd3ff"/>
+      <stop offset="1" stop-color="#b671ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="768" height="432" fill="url(#bg)"/>
+  <circle cx="384" cy="216" r="170" fill="none" stroke="#d5a4ff" stroke-opacity="0.2" stroke-width="12"/>
+  <circle cx="384" cy="216" r="128" fill="none" stroke="#efc4ff" stroke-opacity="0.38" stroke-width="5"/>
+  <path d="M286 134 L326 76 L370 140 L384 58 L398 140 L442 76 L482 134 L456 176 H312Z" fill="url(#crown)" stroke="#ffe4ff" stroke-opacity="0.55" stroke-width="4"/>
+  <path d="M384 120 L468 166 V246 C468 298 432 336 384 362 C336 336 300 298 300 246 V166Z" fill="#7f49c2"/>
+  <path d="M384 154 L436 184 V236 C436 270 414 298 384 316 C354 298 332 270 332 236 V184Z" fill="#2a1644"/>
+  <circle cx="384" cy="232" r="22" fill="#ffd9ff"/>
+  <path d="M256 286 Q384 246 512 286" fill="none" stroke="#cc8bff" stroke-opacity="0.5" stroke-width="7"/>
+  <rect x="2" y="2" width="764" height="428" fill="none" stroke="#d5b1ff" stroke-opacity="0.28" stroke-width="3"/>
+</svg>

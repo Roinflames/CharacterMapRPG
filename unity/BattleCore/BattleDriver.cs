@@ -55,6 +55,18 @@ namespace CharacterMapRPG.BattleCore
         [SerializeField] private PortraitVisualStyle portraitStyle = PortraitVisualStyle.AssetPack;
         [SerializeField] private bool allowDemoEncounterWithoutPending = false;
 
+        [Header("Vibe")]
+        [SerializeField] private float preActionDelay = 0.22f;
+        [SerializeField] private float enemyResponseDelay = 0.45f;
+        [SerializeField] private float impactPause = 0.28f;
+        [SerializeField] private float portraitShakeDuration = 0.28f;
+        [SerializeField] private float portraitShakeIntensity = 4.5f;
+        [SerializeField] private float portraitFlashDuration = 0.22f;
+        [SerializeField] private float buttonPulseDuration = 0.28f;
+        [SerializeField] private float buttonPulseScale = 1.08f;
+        [SerializeField] private Color playerHitFlash = new Color(0.65f, 0.95f, 0.55f, 1f);
+        [SerializeField] private Color enemyHitFlash = new Color(1f, 0.55f, 0.55f, 1f);
+
         private BattleEngine _engine;
         private BattleProgression _progression;
         private GameSession _session;
@@ -67,6 +79,8 @@ namespace CharacterMapRPG.BattleCore
         private Coroutine _enemyBreathAnim;
         private Texture2D _playerPortraitTexture;
         private Texture2D _enemyPortraitTexture;
+        private Vector2 _playerPortraitBasePosition;
+        private Vector2 _enemyPortraitBasePosition;
 
         private void Awake()
         {
@@ -80,6 +94,7 @@ namespace CharacterMapRPG.BattleCore
         private void Start()
         {
             WireButtons();
+            CapturePortraitPositions();
             StartEncounter();
         }
 
@@ -176,6 +191,12 @@ namespace CharacterMapRPG.BattleCore
             ActionResolution playerResolution = _engine.ExecutePlayerAction(action);
             ApplyResolution(playerResolution);
             RefreshUi();
+            Button actionButton = ButtonForAction(action);
+            if (actionButton != null)
+            {
+                StartCoroutine(PulseButton(actionButton));
+            }
+            yield return PlayImpactSequence(playerResolution, true);
 
             if (_engine.IsFinished)
             {
@@ -184,11 +205,12 @@ namespace CharacterMapRPG.BattleCore
                 yield break;
             }
 
-            yield return new WaitForSeconds(0.35f);
+            yield return new WaitForSeconds(preActionDelay);
 
             ActionResolution enemyResolution = _engine.ExecuteEnemyTurn();
             ApplyResolution(enemyResolution);
             RefreshUi();
+            yield return PlayImpactSequence(enemyResolution, false);
 
             if (_engine.IsFinished)
             {
@@ -197,6 +219,7 @@ namespace CharacterMapRPG.BattleCore
                 yield break;
             }
 
+            yield return new WaitForSeconds(enemyResponseDelay);
             SetButtonsInteractable(true);
             TryRefreshPreview();
             _busy = false;
@@ -335,6 +358,7 @@ namespace CharacterMapRPG.BattleCore
             enemyPortraitImage = enemyPortrait;
             playerPortraitRoot = playerRoot;
             enemyPortraitRoot = enemyRoot;
+            CapturePortraitPositions();
         }
 
         public void BindStyleUi(Button styleToggle, Text styleLabel)
@@ -366,6 +390,109 @@ namespace CharacterMapRPG.BattleCore
             {
                 styleButton.onClick.RemoveListener(OnStylePressed);
                 styleButton.onClick.AddListener(OnStylePressed);
+            }
+        }
+
+        private Button ButtonForAction(ActionType action)
+        {
+            switch (action)
+            {
+                case ActionType.Attack:
+                    return attackButton;
+                case ActionType.Heal:
+                    return healButton;
+                case ActionType.Escape:
+                    return escapeButton;
+                default:
+                    return null;
+            }
+        }
+
+        private IEnumerator PlayImpactSequence(ActionResolution resolution, bool isPlayerAction)
+        {
+            if (resolution == null) yield break;
+
+            RectTransform targetRoot = isPlayerAction ? enemyPortraitRoot : playerPortraitRoot;
+            RawImage targetImage = isPlayerAction ? enemyPortraitImage : playerPortraitImage;
+            Vector2 basePosition = isPlayerAction ? _enemyPortraitBasePosition : _playerPortraitBasePosition;
+            Color flashColor = isPlayerAction ? enemyHitFlash : playerHitFlash;
+            float shakeIntensity = portraitShakeIntensity * (resolution.IsCritical ? 1.25f : 1f);
+
+            if (targetRoot != null)
+            {
+                StartCoroutine(ShakePortrait(targetRoot, basePosition, shakeIntensity, portraitShakeDuration));
+            }
+
+            if (targetImage != null)
+            {
+                StartCoroutine(FlashPortrait(targetImage, flashColor, portraitFlashDuration));
+            }
+
+            yield return new WaitForSeconds(impactPause);
+        }
+
+        private IEnumerator ShakePortrait(RectTransform target, Vector2 basePosition, float intensity, float duration)
+        {
+            if (target == null) yield break;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float strength = Mathf.Lerp(intensity, 0f, elapsed / duration);
+                float offsetX = (UnityEngine.Random.value * 2f - 1f) * strength;
+                float offsetY = (UnityEngine.Random.value * 2f - 1f) * strength * 0.7f;
+                target.anchoredPosition = basePosition + new Vector2(offsetX, offsetY);
+                yield return null;
+            }
+
+            target.anchoredPosition = basePosition;
+        }
+
+        private IEnumerator FlashPortrait(RawImage image, Color flashColor, float duration)
+        {
+            if (!image) yield break;
+            Color original = image.color;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float pulse = Mathf.Sin(Mathf.PI * elapsed / duration);
+                image.color = Color.Lerp(original, flashColor, pulse);
+                yield return null;
+            }
+
+            image.color = original;
+        }
+
+        private IEnumerator PulseButton(Button button)
+        {
+            if (button == null) yield break;
+            RectTransform rt = button.transform as RectTransform;
+            if (rt == null) yield break;
+            Vector3 original = rt.localScale;
+            float timer = 0f;
+            while (timer < buttonPulseDuration)
+            {
+                timer += Time.deltaTime;
+                float normalized = Mathf.Sin(Mathf.PI * timer / buttonPulseDuration);
+                float scale = Mathf.Lerp(1f, buttonPulseScale, normalized);
+                rt.localScale = original * scale;
+                yield return null;
+            }
+
+            rt.localScale = original;
+        }
+
+        private void CapturePortraitPositions()
+        {
+            if (playerPortraitRoot != null)
+            {
+                _playerPortraitBasePosition = playerPortraitRoot.anchoredPosition;
+            }
+
+            if (enemyPortraitRoot != null)
+            {
+                _enemyPortraitBasePosition = enemyPortraitRoot.anchoredPosition;
             }
         }
 
@@ -511,6 +638,8 @@ namespace CharacterMapRPG.BattleCore
                 if (_enemyBreathAnim != null) StopCoroutine(_enemyBreathAnim);
                 _enemyBreathAnim = StartCoroutine(Breathing(enemyPortraitRoot, 1f, 0.018f, 0.25f));
             }
+
+            CapturePortraitPositions();
         }
 
         private static IEnumerator Breathing(RectTransform target, float baseScale, float amplitude, float phase)

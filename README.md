@@ -1,4 +1,4 @@
-# Character Map (UI v0.29.0)
+# Character Map (UI v0.35.4)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formación de equipo. Esta versión agrega el pipeline Unity para combate, retratos por asset pack y progresión con respawn de hitos.
 
@@ -50,6 +50,50 @@ Se inicio la migracion de combate solido hacia Unity con soporte de canon extern
 
 ## Historial de versiones
 
+- `v0.35.4`: modal debug extendido con `Salto ruta/mundo`: selector dinamico de rutas (1-13) + boton `Ir ruta`, con bloqueo en combate y transicion limpia desde lore a modo juego.
+- `v0.35.3`: hotfix adicional `Salto nivel`: ahora usa seteo exacto de nivel (subir y bajar) reconstruyendo stats desde base, con mensaje de confirmacion `nivel anterior -> nivel nuevo`.
+- `v0.35.2`: hotfix `Salto nivel`: ahora aplica subida por ajuste directo de nivel/atributos (sin depender de bucle de EXP), recarga HP al maximo y refresca stats/estado al instante.
+- `v0.35.1`: `Salto nivel` reparado: overlay debug funcional en UI (abrir/cerrar/aplicar), validacion de rango (1-99), bloqueo durante combate/lore y aplicacion por nivel objetivo con Enter o boton.
+- `v0.35.0`: terror reforzado en exploracion (`Dark Brutal`): pulso de amenaza en todas las rutas, stingers graves aleatorios al acercarte a enemigos, camara con deriva tensa por nivel de amenaza, niebla mas cerrada en `high/critical` y feedback visual de panic/flicker en el mapa.
+- `v0.34.9`: modo visual `Dark Brutal` activado (tema runtime en `body[data-theme]`, atmosfera del mapa reforzada y estilo UI/paneles/botones ajustado a una direccion mas oscura y agresiva).
+- `v0.34.8`: aullido de lobo en preset mas oscuro tipo Castlevania (base chip agresiva, ruido controlado y cola con eco grave).
+- `v0.34.7`: aullido de lobo extendido (cola mas larga y caida mas lenta) para lectura mas natural de lobo y menos efecto corto.
+- `v0.34.6`: aullido de lobo llevado a tono mas feral (dual garganta aspera + capa de aliento rugoso + yelp final), reduciendo caracter de silbido musical.
+- `v0.34.5`: timbre de lobo refinado (menos grave): aullido y grunido con fundamental mas alta y recorte de bajos para evitar sonido tipo elefante.
+- `v0.34.4`: audio de lobo agregado: aullido al iniciar combate contra Lobo Sombrio y grunido corto en su turno enemigo.
+- `v0.34.3`: rollback visual de enemigos: 3D experimental desactivado por defecto para priorizar claridad del retrato 2D hasta tener modelos/texturas de mayor calidad.
+- `v0.34.2`: mejoras de animacion 3D en enemigos: idle con respiracion/balanceo, reaccion de impacto, embestida en turno enemigo y soporte de clips GLB si el modelo trae animaciones.
+- `v0.34.1`: latidos de amenaza habilitados en todas las rutas (ya no quedan restringidos a Ruta 1).
+- `v0.33.11`: SFX de ataque redisenado a golpe fisico (thump grave + crack agudo + burst de ruido corto) para mayor sensacion de impacto.
+- `v0.33.10`: hotfix retrato de combate: al abrir modal fuerza vista 2D por defecto y reduce opacidad de capa blur para evitar pantallas borrosas/pixeladas.
+- `v0.33.9`: tuning visual del POC 3D (camara/luces/fondo) y ocultamiento de capa blur al activar 3D para evitar resultado borroso.
+- `v0.33.8`: POC enemigo 3D en combate sin Unity (Three.js + GLTFLoader con modelos GLB locales), con fallback automatico a retrato 2D si no hay soporte o falla la carga.
+- `v0.33.7`: integracion visual de Mini Dungeon (CC0) en el mapa: `character-orc` para hitos pendientes, `chest` para hitos completados y `gate` para la meta con fallback al render clasico.
+- `v0.33.6`: flujo de mochila integrado al combate: boton `Item` abre inventario rapido y al usar un objeto se cierra overlay y continua turno correctamente.
+- `v0.33.5`: botones de combate en mobile vuelven a formato horizontal (3 columnas) para reducir altura del modal y mejorar lectura tactil.
+- `v0.33.4`: layout responsive real en mobile/tablet/desktop (sin ancho minimo rigido, columnas apiladas y overlay de inventario/combate adaptados a pantallas pequenas).
+- `v0.33.3`: retratos de Ruta 3 reemplazados por emblemas tipo logo (sin rostros) para mantener estilo decorativo y legible.
+- `v0.33.2`: atajo debug `L` para subir 1 nivel instantaneo durante pruebas (otorga EXP faltante al siguiente nivel).
+- `v0.33.0`: nueva `Ruta 3` jugable con jefe final (`Soberano del Abismo`) y flujo de historia extendido (Ruta 2 ahora desbloquea Ruta 3 al pisar meta dorada con hitos completos).
+- `v0.32.2`: fases visuales habilitadas en todas las rutas (ya no se quedan en estado neutral fuera de Ruta 1, incluida etapa 3).
+- `v0.32.1`: fix IA enemigos: persecucion solo con linea de vision real (ya no detectan/ven al jugador a traves de muros).
+- `v0.31.9`: motivo musical del Mundo 1 con variantes A/B/C (`M1-A`, `M1-B`, `M1-C`) para comparar estilo desde el selector Exterior.
+- `v0.31.8`: melodias complejizadas con arreglos en capas (lead, armonia, bajo y acentos ritmicos) y variacion por compas/estado.
+- `v0.31.7`: pulso de amenaza rediseñado a latido tipo corazon (`lub-dub`) con tono grave y respuesta por nivel de amenaza.
+- `v0.31.6`: presencia enemiga endurecida: ecos solo al moverte, menor radio y menor intensidad para evitar localizar enemigos sin explorar.
+- `v0.31.5`: inventario rapido iniciado en overlay tipo libro (base estructural para experiencia en misma pantalla).
+- `v0.31.4`: deteccion de enemigos ajustada para mayor tension: revelado en dos etapas (eco tenue y revelado completo) y menor rango de ecos de presencia.
+- `v0.31.2`: hotfix de visibilidad en niebla: hitos se revelan antes, centro de vision mas claro y marcadores enemigos dibujados sobre la niebla.
+- `v0.31.1`: Mundo 1 con cambio visual mucho mas marcado por fases (corrupto/fracturado/purificado), atmosfera global reactiva y HUD con estado del mundo.
+- `v0.31.0`: Mundo 1 inmersivo completo: niveles de amenaza en tiempo real, ecos de presencia enemiga en mapa, pulso sonoro reactivo y transicion visual al entrar en combate.
+- `v0.30.6`: control manual temporal de fase visual en Mundo 1 para afinar direccion artistica (`[` baja, `]` sube, `0` vuelve a progreso real).
+- `v0.30.5`: terreno visual renovado con variacion procedural por tile (texturas, sombras y meta con brillo) para eliminar aspecto tipo ajedrez.
+- `v0.30.4`: selector de versiones para tema exterior (V1/V2/V3) y opcion de componer melodia personalizada por notas (guardada en localStorage).
+- `v0.30.3`: tempo de musica en batalla acelerado con pulso grave adicional para un feel mas metal (riff mas agresivo en combate).
+- `v0.30.1`: hotfix de audio web (desbloqueo por gesto global, volumen base de BGM reforzado y feedback cuando el navegador bloquea audio).
+- `v0.30.0`: audio web activado con BGM/SFX procedural, control de mute y slider de volumen en la UI.
+- `v0.29.1`: salida del prólogo reforzada (clic/Enter/Espacio para continuar) y mejora de contraste/legibilidad del botón de avance en lore.
+- `v0.29.0`: se integra el frente Unity (Battle Core) con canon externo, pipeline de retratos por asset pack y progresion con respawn de hitos.
 - `v0.28.0`: niebla de guerra en el mapa (vision limitada alrededor del jugador) y ocultamiento tactico de hitos/meta fuera de rango.
 - `v0.27.9`: al ganar, el retrato enemigo se desvanece completamente antes de cerrar el combate.
 - `v0.27.8`: al derrotar un enemigo, el retrato se ilumina y luego se difumina antes de cerrar el combate.

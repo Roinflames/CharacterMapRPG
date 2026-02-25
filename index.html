@@ -3,27 +3,38 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Character Map RPG | UI v0.27.9</title>
+    <title>Character Map RPG | UI v0.35.4</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="layout">
-      <section class="panel">
+      <section id="top-panel" class="panel">
         <h1>Character Map RPG</h1>
         <p>Muevete con <strong>WASD</strong> o <strong>flechas</strong>. La guerra final enfrenta a las legiones del <strong>Cielo</strong> y el <strong>Infierno</strong>.</p>
-        <div class="route-picker">
+        <div class="route-picker hidden">
           <label for="route-select">Ruta:</label>
           <select id="route-select">
             <option value="route1">Ruta 1</option>
             <option value="route2">Ruta 2</option>
+            <option value="route3">Ruta 3</option>
           </select>
         </div>
         <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
-        <p class="version">UI v0.27.9</p>
+        <div class="audio-controls" aria-label="Controles de audio">
+          <button id="audio-toggle-btn" type="button" class="audio-toggle-btn">Audio: OFF</button>
+          <label for="audio-volume" class="audio-volume-label">Vol</label>
+          <input id="audio-volume" type="range" min="0" max="100" value="65" />
+          <button id="world-theme-btn" type="button" class="audio-toggle-btn">Exterior: M1-A</button>
+          <button id="compose-theme-btn" type="button" class="audio-toggle-btn">Componer</button>
+        </div>
+        <div class="debug-level-controls">
+          <button id="debug-level-open-btn" type="button" class="audio-toggle-btn">Salto nivel</button>
+        </div>
+        <p class="version">UI v0.35.4</p>
       </section>
 
-      <section class="inventory" aria-label="Historia principal">
+      <section id="story-panel" class="inventory" aria-label="Historia principal">
         <h2>Historia: Cielo vs Infierno</h2>
         <p id="story-line" class="inventory-help">Dos reinos en guerra abren rutas de combate. Decide a que frente apoyar en cada victoria.</p>
       </section>
@@ -38,12 +49,13 @@
 
       <section class="tablet-layout" aria-label="Vista principal">
         <div class="left-column">
-          <section class="game-shell" aria-label="Mapa del juego">
+          <section id="map-panel" class="game-shell" aria-label="Mapa del juego">
             <canvas id="game" width="640" height="352"></canvas>
           </section>
 
           <section class="controls" aria-label="Controles tactiles">
             <button id="fullscreen-btn" type="button" class="fullscreen-btn">Pantalla completa</button>
+            <button id="inventory-open-btn" type="button" class="fullscreen-btn">Inventario rapido</button>
             <button data-dir="up" aria-label="Mover arriba">▲</button>
             <div>
               <button data-dir="left" aria-label="Mover izquierda">◀</button>
@@ -54,52 +66,86 @@
         </div>
 
         <div class="right-column">
-          <section class="meta-grid">
-            <section class="character-card" aria-label="Stats del personaje">
-              <h2>Personaje</h2>
-              <p id="hero-alias" class="inventory-help">Alias: Jisuo Tenma</p>
-              <div class="equipment-grid">
-                <label for="weapon-select">Arma</label>
-                <select id="weapon-select"></select>
-                <label for="armor-select">Armadura</label>
-                <select id="armor-select"></select>
-              </div>
-              <p id="character-stats">Nivel 1 | EXP 0/20 | HP 24/24 | ATQ 4 | DEF 1</p>
-              <p id="character-bonus">Bonos de equipo: +0 ATQ, +0 DEF, +0 HP.</p>
+          <details id="stats-accordion" class="mobile-accordion character-card" open>
+            <summary>Personaje y Equipo</summary>
+            <section class="meta-grid">
+              <section class="character-card" aria-label="Stats del personaje">
+                <h2>Personaje</h2>
+                <p id="hero-alias" class="inventory-help">Alias: Jisuo Tenma</p>
+                <div class="equipment-grid">
+                  <label for="weapon-select">Arma</label>
+                  <select id="weapon-select"></select>
+                  <label for="armor-select">Armadura</label>
+                  <select id="armor-select"></select>
+                </div>
+                <p id="character-stats">Nivel 1 | EXP 0/20 | HP 24/24 | ATQ 4 | DEF 1</p>
+                <p id="character-bonus">Bonos de equipo: +0 ATQ, +0 DEF, +0 HP.</p>
+              </section>
+
+              <section class="party-card" aria-label="Equipo">
+                <h2>Equipo (max 3)</h2>
+                <ul id="party-list" class="mini-list"></ul>
+                <h3>Reclutas</h3>
+                <ul id="recruit-list" class="mini-list"></ul>
+              </section>
             </section>
+          </details>
 
-            <section class="party-card" aria-label="Equipo">
-              <h2>Equipo (max 3)</h2>
-              <ul id="party-list" class="mini-list"></ul>
-              <h3>Reclutas</h3>
-              <ul id="recruit-list" class="mini-list"></ul>
+          <details id="inventory-accordion" class="mobile-accordion inventory" open>
+            <summary>Inventario</summary>
+            <section aria-label="Inventario">
+              <p class="inventory-help">Usa objetos para recuperar vida o mejorar tu impacto en combate.</p>
+              <ul id="inventory-list" class="inventory-list">
+                <li class="inventory-empty">Sin items todavia.</li>
+              </ul>
             </section>
-          </section>
+          </details>
 
-          <section class="inventory" aria-label="Inventario">
-            <h2>Inventario</h2>
-            <p class="inventory-help">Usa objetos para recuperar vida o mejorar tu impacto en combate.</p>
-            <ul id="inventory-list" class="inventory-list">
-              <li class="inventory-empty">Sin items todavia.</li>
-            </ul>
-          </section>
+          <details id="summon-accordion" class="mobile-accordion inventory">
+            <summary>Invocaciones</summary>
+            <section aria-label="Invocaciones">
+              <p id="summon-essence" class="inventory-help">Esencia de invocacion: 0</p>
+              <ul id="summon-list" class="inventory-list">
+                <li class="inventory-empty">Sin invocaciones.</li>
+              </ul>
+            </section>
+          </details>
 
-          <section class="inventory" aria-label="Invocaciones">
-            <h2>Invocaciones</h2>
-            <p id="summon-essence" class="inventory-help">Esencia de invocacion: 0</p>
-            <ul id="summon-list" class="inventory-list">
-              <li class="inventory-empty">Sin invocaciones.</li>
-            </ul>
-          </section>
-
-          <section class="inventory" aria-label="Historial de combate">
-            <h2>Historial de Combate</h2>
-            <ul id="combat-history" class="history-list">
-              <li class="inventory-empty">Sin eventos aun.</li>
-            </ul>
-          </section>
+          <details id="history-accordion" class="mobile-accordion inventory">
+            <summary>Historial de combate</summary>
+            <section aria-label="Historial de combate">
+              <ul id="combat-history" class="history-list">
+                <li class="inventory-empty">Sin eventos aun.</li>
+              </ul>
+            </section>
+          </details>
         </div>
       </section>
+
+      <nav class="mobile-dock" aria-label="Navegacion movil">
+        <button type="button" data-mobile-jump="map">Mapa</button>
+        <button type="button" data-mobile-jump="stats">Stats</button>
+        <button type="button" data-mobile-jump="inventory">Inventario</button>
+        <button type="button" data-mobile-jump="audio">Audio</button>
+      </nav>
+
+      <div id="start-screen" class="start-screen">
+        <div class="start-content">
+          <p class="start-eyebrow">Character Map RPG</p>
+          <h1 class="start-title">CHARA</h1>
+          <p class="start-subtitle">La guerra final. Trece mundos. Un portador de la luz.</p>
+          <button id="start-btn" type="button" class="start-btn">Jugar</button>
+        </div>
+      </div>
+
+      <div id="lore-screen" class="lore-screen hidden">
+        <button id="lore-skip-btn" type="button" class="lore-skip-btn">Continuar →</button>
+        <div class="lore-content">
+          <p id="lore-chapter" class="lore-chapter"></p>
+          <h2 id="lore-title" class="lore-title"></h2>
+          <div id="lore-text" class="lore-text"></div>
+        </div>
+      </div>
 
       <div id="combat-backdrop" class="combat-backdrop hidden"></div>
       <section id="encounter-panel" class="encounter encounter-modal hidden" aria-live="polite">
@@ -110,40 +156,86 @@
         <div class="enemy-frame">
           <div class="enemy-depth-layer" aria-hidden="true"></div>
           <div class="enemy-breath-layer">
+            <div id="enemy-3d" class="enemy-3d hidden" aria-hidden="true"></div>
             <img id="enemy-image" class="enemy-image" alt="Retrato del enemigo" />
+          </div>
+          <div class="enemy-name-overlay">
+            <h2 id="enemy-name">Enfrentamiento</h2>
           </div>
           <span id="enemy-float-text" class="float-text hidden"></span>
         </div>
-        <h2 id="enemy-name">Enfrentamiento</h2>
-        <div class="hp-bars">
-          <div class="hp-row">
-            <span>Jugador</span>
-            <div class="hp-track">
-              <div id="player-hp-fill" class="hp-fill player"></div>
+        <div class="combat-info">
+          <div class="hp-bars">
+            <div class="hp-row">
+              <span>Jugador</span>
+              <div class="hp-track">
+                <div id="player-hp-fill" class="hp-fill player"></div>
+              </div>
+            </div>
+            <div class="hp-row">
+              <span>Enemigo</span>
+              <div class="hp-track">
+                <div id="enemy-hp-fill" class="hp-fill enemy"></div>
+              </div>
             </div>
           </div>
-          <div class="hp-row">
-            <span>Enemigo</span>
-            <div class="hp-track">
-              <div id="enemy-hp-fill" class="hp-fill enemy"></div>
-            </div>
-          </div>
+          <p id="combat-stats">HP jugador: 20 | HP enemigo: 0</p>
+          <p id="turn-indicator" class="turn-indicator">Turno: Jugador</p>
+          <p id="dice-roll" class="dice-roll">d20: --</p>
+          <p id="attack-preview" class="attack-preview">Ataque previsto: --</p>
+          <p class="inventory-help">Atajos: A Attack, I Item, R Run.</p>
+          <p id="battle-log">Explora el mapa para iniciar un combate.</p>
+          <span id="player-float-text" class="float-text player-float hidden"></span>
         </div>
-        <p id="combat-stats">HP jugador: 20 | HP enemigo: 0</p>
-        <p id="turn-indicator" class="turn-indicator">Turno: Jugador</p>
-        <p id="dice-roll" class="dice-roll">d20: --</p>
-        <p id="attack-preview" class="attack-preview">Ataque previsto: --</p>
-        <p class="inventory-help">Atajos: A atacar, C curar, E escapar.</p>
-        <p id="battle-log">Explora el mapa para iniciar un combate.</p>
-        <span id="player-float-text" class="float-text player-float hidden"></span>
         <div class="encounter-actions">
-          <button id="attack-btn" type="button">Atacar</button>
-          <button id="heal-btn" type="button">Curar</button>
-          <button id="escape-btn" type="button">Escapar</button>
+          <button id="attack-btn" type="button">Attack</button>
+          <button id="heal-btn" type="button">Item</button>
+          <button id="escape-btn" type="button">Run</button>
         </div>
       </section>
+
+      <div id="inventory-overlay" class="inventory-overlay hidden" aria-hidden="true">
+        <section class="inventory-book" aria-label="Inventario rapido">
+          <div class="inventory-book-left">
+            <div class="inventory-overlay-head">
+              <h2>Inventario rapido</h2>
+              <button id="inventory-close-btn" type="button" class="audio-toggle-btn">Cerrar</button>
+            </div>
+            <p class="inventory-help">Selecciona un slot para ver detalle.</p>
+            <div id="inventory-grid" class="inventory-grid" role="list"></div>
+          </div>
+          <div class="inventory-book-right">
+            <h3>Detalles</h3>
+            <p id="inventory-detail-name" class="inventory-detail-name">Sin item seleccionado</p>
+            <p id="inventory-detail-effect" class="inventory-help">Abre el inventario y elige un objeto.</p>
+            <p id="inventory-detail-qty" class="inventory-help">Cantidad: --</p>
+            <div class="inventory-actions">
+              <button id="inventory-use-btn" type="button">Usar</button>
+              <button id="inventory-drop-btn" type="button">Descartar</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="level-skip-overlay" class="level-skip-overlay hidden" aria-hidden="true">
+        <section class="level-skip-card" aria-label="Salto de nivel debug">
+          <h3>Salto de nivel (debug)</h3>
+          <p class="inventory-help">Sube al nivel objetivo sin combate.</p>
+          <label for="level-skip-input">Nivel objetivo</label>
+          <input id="level-skip-input" type="number" min="1" max="99" step="1" value="1" />
+          <label for="level-skip-route-input">Ruta / mundo</label>
+          <select id="level-skip-route-input"></select>
+          <div class="inventory-actions">
+            <button id="level-skip-apply-btn" type="button">Aplicar</button>
+            <button id="level-skip-route-apply-btn" type="button">Ir ruta</button>
+            <button id="level-skip-close-btn" type="button">Cerrar</button>
+          </div>
+        </section>
+      </div>
     </main>
 
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="main.js"></script>
   </body>
 </html>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 432" role="img" aria-label="Emblema Quimera del Vacio">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#2b1742"/>
+      <stop offset="1" stop-color="#090b12"/>
+    </radialGradient>
+  </defs>
+  <rect width="768" height="432" fill="url(#bg)"/>
+  <circle cx="384" cy="216" r="146" fill="none" stroke="#bf8cff" stroke-opacity="0.22" stroke-width="10"/>
+  <path d="M384 108 C338 108 300 144 300 188 C300 228 330 248 384 302 C438 248 468 228 468 188 C468 144 430 108 384 108Z" fill="#7f4ac7"/>
+  <path d="M384 132 C352 132 326 160 326 192 C326 220 350 242 384 276 C418 242 442 220 442 192 C442 160 416 132 384 132Z" fill="#2f1e4a"/>
+  <path d="M236 230 L304 198 L332 240 L268 274Z" fill="#84ffd0" fill-opacity="0.8"/>
+  <path d="M532 230 L464 198 L436 240 L500 274Z" fill="#84ffd0" fill-opacity="0.8"/>
+  <path d="M328 86 L384 44 L440 86 L418 124 H350Z" fill="#f0b8ff" fill-opacity="0.85"/>
+  <rect x="2" y="2" width="764" height="428" fill="none" stroke="#d2a7ff" stroke-opacity="0.24" stroke-width="3"/>
+</svg>

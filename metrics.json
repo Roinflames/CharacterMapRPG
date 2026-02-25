@@ -1,0 +1,12 @@
+{
+  "project_id": "17",
+  "project_slug": "character-map",
+  "group": "active",
+  "priority": "P1",
+  "progress_percent": 70,
+  "status": "on_track",
+  "blocker": "Pipeline Unity en progreso; combate sólido pendiente de migración completa",
+  "version": "UI v0.29.0",
+  "last_update": "2026-02-24",
+  "source": "README.md"
+}

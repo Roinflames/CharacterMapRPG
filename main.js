@@ -2,6 +2,7 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const statusElement = document.getElementById("milestones-status");
+const worldStageStatusElement = document.getElementById("world-stage-status");
 const messageElement = document.getElementById("milestone-message");
 const storyLineElement = document.getElementById("story-line");
 const routeSelect = document.getElementById("route-select");
@@ -30,8 +31,10 @@ const combatStatsElement = document.getElementById("combat-stats");
 const diceRollElement = document.getElementById("dice-roll");
 const attackPreviewElement = document.getElementById("attack-preview");
 const turnIndicatorElement = document.getElementById("turn-indicator");
+const enemyConfidenceElement = document.getElementById("enemy-confidence");
 const playerHpFillElement = document.getElementById("player-hp-fill");
 const enemyHpFillElement = document.getElementById("enemy-hp-fill");
+const combatHpNumbersElement = document.getElementById("combat-hp-numbers");
 const battleLogElement = document.getElementById("battle-log");
 const enemyFloatTextElement = document.getElementById("enemy-float-text");
 const playerFloatTextElement = document.getElementById("player-float-text");
@@ -41,9 +44,13 @@ const healButton = document.getElementById("heal-btn");
 const escapeButton = document.getElementById("escape-btn");
 const fullscreenButton = document.getElementById("fullscreen-btn");
 const inventoryOpenButton = document.getElementById("inventory-open-btn");
+const seekCombatButton = document.getElementById("seek-combat-btn");
 const inventoryOverlay = document.getElementById("inventory-overlay");
 const inventoryCloseButton = document.getElementById("inventory-close-btn");
 const debugLevelOpenButton = document.getElementById("debug-level-open-btn");
+const debugStagePrevButton = document.getElementById("debug-stage-prev-btn");
+const debugStageNextButton = document.getElementById("debug-stage-next-btn");
+const debugStageResetButton = document.getElementById("debug-stage-reset-btn");
 const levelSkipOverlay = document.getElementById("level-skip-overlay");
 const levelSkipInput = document.getElementById("level-skip-input");
 const levelSkipRouteInput = document.getElementById("level-skip-route-input");
@@ -73,6 +80,8 @@ const TILE = 32;
 const MAX_PARTY_SIZE = 3;
 const BASE_VISION_RADIUS = 2.6;
 const DARK_BRUTAL_MODE = true;
+const COMBAT_FOCUS_MODE = false;
+const AUTO_CHAIN_COMBAT_DELAY_MS = 320;
 const MAIN_HERO = {
   publicName: "Jisuo Tenma",
   hiddenLoreName: "Jesus",
@@ -142,6 +151,43 @@ const BGM_PROFILES = {
     beatMs: 380,
   },
 };
+const ENEMY_DIFFICULTY = {
+  hp: 1.22,
+  damage: 1.18,
+};
+const ENEMY_CONFIDENCE_MODEL = {
+  graceMs: 2200,
+  threshold: 100,
+  forceAttackMs: 7000,
+  baseGainPerSec: 17,
+  decayPerSec: 48,
+};
+const CONFIDENCE_PROFILES = {
+  balanced: { gain: 1, decay: 1, attack: 1 },
+  calm: { gain: 0.78, decay: 1.08, attack: 0.76 },
+  aggressive: { gain: 1.36, decay: 0.92, attack: 1.28 },
+  erratic: { gain: 1.16, decay: 1.2, attack: 1.08 },
+};
+const ENEMY_CONFIDENCE_ASSIGNMENT = {
+  "Lobo Sombrio": "aggressive",
+  "Bandido del Valle": "erratic",
+  "Guardian de Piedra": "calm",
+  "Capitan del Portal": "aggressive",
+  "Bruja del Pantano": "erratic",
+  "Caballero Perdido": "balanced",
+  "Bestia de Ceniza": "aggressive",
+  "Arquero del Eclipse": "erratic",
+  "Dragon Menor": "balanced",
+  "Centinela del Umbral": "calm",
+  "Quimera del Vacio": "aggressive",
+  "Oraculo Caido": "erratic",
+  "Soberano del Abismo": "aggressive",
+};
+const WORLD_STAGES = [
+  { index: 1, phase: 0, label: "corrupto", bonus: { atk: 0, def: 0, hp: 0 }, entryReward: { heal: 0, essence: 0 } },
+  { index: 2, phase: 0.34, label: "fracturado", bonus: { atk: 1, def: 1, hp: 4 }, entryReward: { heal: 4, essence: 1 } },
+  { index: 3, phase: 0.67, label: "purificado", bonus: { atk: 2, def: 2, hp: 8 }, entryReward: { heal: 8, essence: 2 } },
+];
 
 const ITEM_DEFS = {
   potion: { name: "Pocion", effect: "Recupera 8 HP" },
@@ -276,6 +322,22 @@ const SUMMONS = [
   { id: "phoenix", name: "Fenix Rojo", race: "draconico", atk: 2, def: 0, hp: 2, level: 1 },
   { id: "warden", name: "Centinela Verde", race: "elfo", atk: 1, def: 2, hp: 1, level: 1 },
   { id: "golem", name: "Golem Escarlata", race: "enano", atk: 1, def: 2, hp: 2, level: 1 },
+];
+
+const WORLDS = [
+  { id: "world1", label: "Mundo 1 · Corrupto", start: { x: 1, y: 1 }, description: "Rutas 1-3, catacumbas de acero y portal guardian.", routes: ["route1"], bossRoute: "route1", type: "linear" },
+  { id: "world2", label: "Mundo 2 · Cristalista", start: { x: 1, y: 1 }, description: "La ruta 2 retuerce sobre cristales armónicos.", routes: ["route2"], bossRoute: "route2", type: "linear" },
+  { id: "world3", label: "Mundo 3 · Purificador", start: { x: 1, y: 1 }, description: "Ruta 3 culmina en la fortaleza celestial.", routes: ["route3"], bossRoute: "route3", type: "linear" },
+  { id: "world4", label: "Mundo 4 · Fisura", start: { x: 1, y: 9 }, description: "Ruta 4 abre la fractura cristalina antes de los loops.", routes: ["route4"], bossRoute: "route4", type: "linear" },
+  { id: "world5", label: "Mundo 5 · Domo", start: { x: 1, y: 9 }, description: "Ruta 5 es una red de cúpulas que se conectan con la 6.", routes: ["route5"], bossRoute: "route5", type: "linear" },
+  { id: "world6", label: "Mundo 6 · Senda Oscura", start: { x: 1, y: 9 }, description: "Ruta 6 remata un portal dimensional para la resistencia.", routes: ["route6"], bossRoute: "route6", type: "warp", warpHint: "Completa la 5 para activar el enlace a la 6." },
+  { id: "world7", label: "Mundo 7 · Árida Purga", start: { x: 1, y: 9 }, description: "Ruta 7 comienza la purga, con arenas y sales corrosivas.", routes: ["route7"], bossRoute: "route7", type: "linear" },
+  { id: "world8", label: "Mundo 8 · Cúpula", start: { x: 1, y: 9 }, description: "Ruta 8 agrega cúpulas y defensores de holo.", routes: ["route8"], bossRoute: "route8", type: "linear" },
+  { id: "world9", label: "Mundo 9 · Solaz", start: { x: 1, y: 9 }, description: "Ruta 9 culmina en una fortaleza brillante.", routes: ["route9"], bossRoute: "route9", type: "linear" },
+  { id: "world10", label: "Mundo 10 · Umbral", start: { x: 1, y: 9 }, description: "Ruta 10 da una antesala abisal con vías dobles.", routes: ["route10"], bossRoute: "route10", type: "linear" },
+  { id: "world11", label: "Mundo 11 · Laberinto de Corte", start: { x: 1, y: 9 }, description: "Ruta 11 se apoya en corredores en espiral y proximidad tensa.", routes: ["route11"], bossRoute: "route11", type: "warp", warpHint: "Se puede saltar a ruta 13 al activar la fase final." },
+  { id: "world12", label: "Mundo 12 · Nexo de Ruinas", start: { x: 1, y: 9 }, description: "Ruta 12 distribuye nexos de ruinas con alto riesgo.", routes: ["route12"], bossRoute: "route12", type: "linear" },
+  { id: "world13", label: "Mundo 13 · Abismo Final", start: { x: 1, y: 9 }, description: "Ruta 13 encierra al Soberano del Abismo.", routes: ["route13"], bossRoute: "route13", type: "warp", warpHint: "Este jefe cierra la campaña entera." },
 ];
 
 const ROUTES = {
@@ -459,7 +521,26 @@ function initializeMilestones() {
   });
 }
 
+function applyEnemyDifficultyToMilestones() {
+  ROUTE_ORDER.forEach((routeId) => {
+    ROUTES[routeId].milestones.forEach((milestone) => {
+      if (!milestone.baseHp) milestone.baseHp = milestone.hp;
+      milestone.hp = Math.max(1, Math.round(milestone.baseHp * ENEMY_DIFFICULTY.hp));
+    });
+  });
+}
+
 initializeMilestones();
+applyEnemyDifficultyToMilestones();
+
+function getWorldByRoute(routeId) {
+  return WORLDS.find((world) => world.routes.includes(routeId)) || null;
+}
+
+function getWorldEntryForRoute(routeId) {
+  const world = getWorldByRoute(routeId);
+  return world ? world.start : ROUTES[routeId].start;
+}
 
 const LORE_SEQUENCE = [
   {
@@ -526,8 +607,10 @@ const player = {
   y: 1,
   visualX: 1 * 32,
   visualY: 1 * 32,
-  hp: 24,
-  baseMaxHp: 24,
+  facing: "down",
+  stepPhase: 0,
+  hp: 30,
+  baseMaxHp: 30,
   level: 1,
   exp: 0,
   nextExp: 20,
@@ -539,11 +622,12 @@ const PLAYER_LEVEL_BASE = {
   level: 1,
   exp: 0,
   nextExp: 20,
-  baseMaxHp: 24,
+  baseMaxHp: 30,
   baseAtk: 4,
   baseDef: 1,
 };
 
+const initialWorldId = getWorldByRoute("route1")?.id || null;
 const state = {
   gameScreen: "start",
   activeLoreEntry: null,
@@ -573,6 +657,19 @@ const state = {
   audio: { enabled: false, volume: 0.65, worldThemeIndex: 0, customWorldNotes: null },
   debugWorldPhaseOverride: null,
   worldThreat: { level: "low", distance: Infinity, lastPulseAt: 0 },
+  enemyConfidence: {
+    value: 0,
+    lastPlayerActionAt: 0,
+    lastTickAt: 0,
+    cueLevel: 0,
+    forcedAttackPending: false,
+    enemyAttackChain: 0,
+  },
+  playerMovedSinceLastCombat: false,
+  currentWorldId: initialWorldId,
+  worldStageByRoute: Object.fromEntries(
+    ROUTE_ORDER.map((routeId) => [routeId, { lastStage: 1, rewardGrantedUpTo: 1 }]),
+  ),
   fearLastStingAt: 0,
   inventorySelectedItemId: null,
   enemyAiLastStepAt: 0,
@@ -614,6 +711,14 @@ const mapIcons = {
   enemy: createMapIcon(MINI_DUNGEON_ICON_PATHS.enemy),
   loot: createMapIcon(MINI_DUNGEON_ICON_PATHS.loot),
   goal: createMapIcon(MINI_DUNGEON_ICON_PATHS.goal),
+};
+
+const PLAYER_SPRITE_PATH = "assets/player/knight.png";
+const playerSprite = createMapIcon(PLAYER_SPRITE_PATH);
+
+const inputState = {
+  held: new Set(),
+  lastDir: null,
 };
 
 function drawMapIcon(icon, centerX, centerY, size) {
@@ -1368,6 +1473,7 @@ function setCombatTurn(turn) {
   state.combatTurn = turn;
   turnIndicatorElement.textContent = turn === "player" ? "Turno: Jugador" : "Turno: Enemigo";
   if (turn === "player") {
+    notePlayerCombatActivity();
     if (state.activeEncounter) {
       const active = getActivePassive();
       const regen = active.passive.turnRegen || 0;
@@ -1387,6 +1493,152 @@ function setCombatTurn(turn) {
   } else {
     state.pendingAttackPreview = null;
     if (attackPreviewElement) attackPreviewElement.textContent = "Ataque previsto: --";
+  }
+}
+
+function resetEnemyConfidence() {
+  state.enemyConfidence.value = 0;
+  state.enemyConfidence.lastPlayerActionAt = performance.now();
+  state.enemyConfidence.lastTickAt = performance.now();
+  state.enemyConfidence.cueLevel = 0;
+  state.enemyConfidence.forcedAttackPending = false;
+  state.enemyConfidence.enemyAttackChain = 0;
+  if (enemyConfidenceElement) {
+    enemyConfidenceElement.textContent = "Confianza enemiga: 0% | Castigo por inactividad: --";
+  }
+}
+
+function getEnemyConfidenceVolatility() {
+  const chain = Math.max(0, state.enemyConfidence.enemyAttackChain || 0);
+  return 1 + Math.min(1.6, chain * 0.18);
+}
+
+function getActiveConfidenceProfile() {
+  const enemyName = state.activeEncounter?.milestone?.enemy;
+  const profileKey =
+    state.activeEncounter?.milestone?.confidenceProfile ||
+    ENEMY_CONFIDENCE_ASSIGNMENT[enemyName] ||
+    "balanced";
+  return CONFIDENCE_PROFILES[profileKey] || CONFIDENCE_PROFILES.balanced;
+}
+
+function notePlayerCombatActivity() {
+  const volatility = getEnemyConfidenceVolatility();
+  const profile = getActiveConfidenceProfile();
+  state.enemyConfidence.lastPlayerActionAt = performance.now();
+  state.enemyConfidence.value = Math.max(0, state.enemyConfidence.value - 22 * volatility * profile.decay);
+  state.enemyConfidence.enemyAttackChain = Math.max(0, state.enemyConfidence.enemyAttackChain - 1);
+  if (state.enemyConfidence.value < 35) state.enemyConfidence.cueLevel = 0;
+}
+
+function updateEnemyConfidenceHud(inactivityMs = 0) {
+  if (!enemyConfidenceElement) return;
+  if (!state.activeEncounter || state.combatTurn !== "player") {
+    enemyConfidenceElement.textContent = "Confianza enemiga: -- | Castigo por inactividad: --";
+    return;
+  }
+  const clamped = Math.max(0, Math.min(100, Math.round(state.enemyConfidence.value)));
+  const msToForce = Math.max(0, ENEMY_CONFIDENCE_MODEL.forceAttackMs - inactivityMs);
+  const sec = (msToForce / 1000).toFixed(1);
+  const volatility = getEnemyConfidenceVolatility();
+  enemyConfidenceElement.textContent =
+    msToForce === 0
+      ? `Confianza enemiga: ${clamped}% | Ritmo x${volatility.toFixed(2)} | Castigo: AHORA`
+      : `Confianza enemiga: ${clamped}% | Ritmo x${volatility.toFixed(2)} | Castigo: ${sec}s`;
+}
+
+function registerEnemyAttackConfidenceShift() {
+  state.enemyConfidence.enemyAttackChain = Math.min(12, (state.enemyConfidence.enemyAttackChain || 0) + 1);
+  const volatility = getEnemyConfidenceVolatility();
+  const profile = getActiveConfidenceProfile();
+  state.enemyConfidence.value = Math.min(
+    ENEMY_CONFIDENCE_MODEL.threshold + 20,
+    state.enemyConfidence.value + 8 * volatility * profile.attack,
+  );
+}
+
+function getEnemyConfidenceGainPerSec() {
+  const threatMult =
+    state.worldThreat.level === "critical" ? 1.35
+      : state.worldThreat.level === "high" ? 1.2
+        : state.worldThreat.level === "medium" ? 1.08
+          : 1;
+  const stage = getCurrentWorldStage().index;
+  const stageMult = stage === 3 ? 0.9 : stage === 2 ? 0.96 : 1;
+  const enemyHpPct = state.activeEncounter ? state.activeEncounter.hp / state.activeEncounter.milestone.hp : 1;
+  const playerHpPct = player.hp / Math.max(1, getMaxHp());
+  const hpAdvantageMult = enemyHpPct > playerHpPct ? 1.24 : 0.9;
+  const volatility = getEnemyConfidenceVolatility();
+  const profile = getActiveConfidenceProfile();
+  return ENEMY_CONFIDENCE_MODEL.baseGainPerSec * threatMult * stageMult * hpAdvantageMult * volatility * profile.gain;
+}
+
+async function triggerConfidenceAttack() {
+  if (!state.activeEncounter) return;
+  if (state.combatTurn !== "player" || state.combatLocked || state.enemyConfidence.forcedAttackPending) return;
+
+  state.enemyConfidence.forcedAttackPending = true;
+  state.combatLocked = true;
+  setCombatControlsEnabled(false);
+  battleLogElement.textContent = "El enemigo detecta tu duda y toma la iniciativa.";
+  logCombatEvent("Confianza enemiga al maximo: ataque por inactividad.");
+  await wait(220);
+  if (state.activeEncounter && state.combatTurn === "player") {
+    await enemyTurn();
+  }
+  state.enemyConfidence.value = 0;
+  state.enemyConfidence.cueLevel = 0;
+  state.enemyConfidence.lastPlayerActionAt = performance.now();
+  state.enemyConfidence.forcedAttackPending = false;
+  state.combatLocked = false;
+  if (state.activeEncounter && state.combatTurn === "player") {
+    setCombatControlsEnabled(true);
+  }
+}
+
+function updateEnemyConfidence(now) {
+  if (!state.activeEncounter) {
+    resetEnemyConfidence();
+    return;
+  }
+  if (state.combatTurn !== "player" || state.combatLocked) {
+    state.enemyConfidence.lastTickAt = now;
+    updateEnemyConfidenceHud(0);
+    return;
+  }
+
+  if (!state.enemyConfidence.lastTickAt) state.enemyConfidence.lastTickAt = now;
+  if (!state.enemyConfidence.lastPlayerActionAt) state.enemyConfidence.lastPlayerActionAt = now;
+  const dt = Math.max(0, Math.min(0.28, (now - state.enemyConfidence.lastTickAt) / 1000));
+  state.enemyConfidence.lastTickAt = now;
+  const inactivityMs = now - state.enemyConfidence.lastPlayerActionAt;
+  updateEnemyConfidenceHud(inactivityMs);
+
+  if (inactivityMs < ENEMY_CONFIDENCE_MODEL.graceMs) {
+    const volatility = getEnemyConfidenceVolatility();
+    const profile = getActiveConfidenceProfile();
+    state.enemyConfidence.value = Math.max(
+      0,
+      state.enemyConfidence.value - ENEMY_CONFIDENCE_MODEL.decayPerSec * volatility * dt * profile.decay,
+    );
+    return;
+  }
+
+  state.enemyConfidence.value = Math.min(
+    ENEMY_CONFIDENCE_MODEL.threshold + 20,
+    state.enemyConfidence.value + getEnemyConfidenceGainPerSec() * dt,
+  );
+
+  if (state.enemyConfidence.value >= 45 && state.enemyConfidence.cueLevel < 1) {
+    state.enemyConfidence.cueLevel = 1;
+    battleLogElement.textContent = "El enemigo te estudia. Actua o perderas la iniciativa.";
+  } else if (state.enemyConfidence.value >= 78 && state.enemyConfidence.cueLevel < 2) {
+    state.enemyConfidence.cueLevel = 2;
+    battleLogElement.textContent = "La confianza enemiga crece: esta a punto de atacar.";
+  }
+
+  if (inactivityMs >= ENEMY_CONFIDENCE_MODEL.forceAttackMs && !state.enemyConfidence.forcedAttackPending) {
+    triggerConfidenceAttack();
   }
 }
 
@@ -2036,6 +2288,7 @@ async function runPlayerAction(action) {
   if (!state.activeEncounter) return;
   if (state.combatTurn !== "player" || state.combatLocked) return;
 
+  notePlayerCombatActivity();
   state.combatLocked = true;
   setCombatControlsEnabled(false);
   try {
@@ -2079,7 +2332,7 @@ function getPartyBonus() {
 }
 
 function getMaxHp() {
-  return player.baseMaxHp + getPartyBonus().hp + getSummonBonus().hp + getEquipmentBonus().hp;
+  return player.baseMaxHp + getPartyBonus().hp + getSummonBonus().hp + getEquipmentBonus().hp + getWorldStageBonus().hp;
 }
 
 function getTotalItems() {
@@ -2088,12 +2341,12 @@ function getTotalItems() {
 
 function getPlayerAtk() {
   const passive = getActivePassive().passive;
-  return player.baseAtk + getPartyBonus().atk + getSummonBonus().atk + getEquipmentBonus().atk + (passive.atkFlat || 0);
+  return player.baseAtk + getPartyBonus().atk + getSummonBonus().atk + getEquipmentBonus().atk + getWorldStageBonus().atk + (passive.atkFlat || 0);
 }
 
 function getPlayerDef() {
   const passive = getActivePassive().passive;
-  return player.baseDef + getPartyBonus().def + getSummonBonus().def + getEquipmentBonus().def + (passive.defFlat || 0);
+  return player.baseDef + getPartyBonus().def + getSummonBonus().def + getEquipmentBonus().def + getWorldStageBonus().def + (passive.defFlat || 0);
 }
 
 function getPlayerRaceKey() {
@@ -2507,9 +2760,10 @@ function updateStatsPanel() {
   const maxHp = getMaxHp();
   const bonus = getPartyBonus();
   const equip = getEquipmentBonus();
+  const stageBonus = getWorldStageBonus();
   heroAliasElement.textContent = `Alias: ${MAIN_HERO.publicName} (${MAIN_HERO.title})`;
   characterStatsElement.textContent = `Nivel ${player.level} | EXP ${player.exp}/${player.nextExp} | HP ${player.hp}/${maxHp} | ATQ ${getPlayerAtk()} | DEF ${getPlayerDef()}`;
-  characterBonusElement.textContent = `Bonos aliados: +${bonus.atk} ATQ, +${bonus.def} DEF, +${bonus.hp} HP | Equipo: ${equip.weapon.name} / ${equip.armor.name}.`;
+  characterBonusElement.textContent = `Bonos aliados: +${bonus.atk} ATQ, +${bonus.def} DEF, +${bonus.hp} HP | Etapa: +${stageBonus.atk} ATQ, +${stageBonus.def} DEF, +${stageBonus.hp} HP | Equipo: ${equip.weapon.name} / ${equip.armor.name}.`;
 }
 
 function renderEquipment() {
@@ -2591,6 +2845,7 @@ function resetRun(customMessage) {
     milestone.y = milestone.spawnY;
     milestone.aiMode = "idle";
   });
+  state.worldStageByRoute[state.routeId] = { lastStage: 1, rewardGrantedUpTo: 1 };
   state.routeState[state.routeId] = { x: route.start.x, y: route.start.y, initialized: true };
 
   state.combatLocked = false;
@@ -2601,6 +2856,7 @@ function resetRun(customMessage) {
   messageElement.textContent = customMessage || `Reinicio en ${route.label}.`;
   updateStatsPanel();
   updateStatus();
+  state.playerMovedSinceLastCombat = false;
 }
 
 function switchRoute(routeId, customMessage) {
@@ -2610,8 +2866,12 @@ function switchRoute(routeId, customMessage) {
   state.routeId = routeId;
   state.route = ROUTES[routeId];
   routeSelect.value = routeId;
+  const world = getWorldByRoute(routeId);
+  state.currentWorldId = world?.id || null;
   const saved = state.routeState[routeId];
-  const spawn = saved && saved.initialized ? saved : state.route.start;
+  const isFirstRouteOfWorld = world && world.routes[0] === routeId;
+  const preferredStart = isFirstRouteOfWorld ? world.start : state.route.start;
+  const spawn = saved && saved.initialized ? saved : preferredStart;
   player.x = spawn.x;
   player.y = spawn.y;
   player.visualX = spawn.x * TILE;
@@ -2624,7 +2884,8 @@ function switchRoute(routeId, customMessage) {
   setCombatControlsEnabled(true);
   setCombatModalOpen(false);
   state.enemyAiLastStepAt = 0;
-  messageElement.textContent = customMessage || `${MAIN_HERO.publicName} entra en ${state.route.label}.`;
+  const entryLabel = world ? `${world.label}: ${state.route.label}` : state.route.label;
+  messageElement.textContent = customMessage || `${MAIN_HERO.publicName} entra en ${entryLabel}.`;
   updateStatsPanel();
   updateStatus();
 }
@@ -2678,6 +2939,40 @@ function getMilestoneAt(x, y) {
   return state.route.milestones.find((milestone) => milestone.x === x && milestone.y === y);
 }
 
+function getNearestPendingMilestone() {
+  const pending = state.route.milestones.filter((milestone) => !milestone.completed);
+  if (pending.length === 0) return null;
+  return pending.reduce((best, milestone) => {
+    const distance = Math.hypot(player.x - milestone.x, player.y - milestone.y);
+    if (!best || distance < best.distance) return { milestone, distance };
+    return best;
+  }, null);
+}
+
+function seekCombat(customMessage, options = {}) {
+  const { autoChain = false } = options;
+  if (state.gameScreen !== "playing") {
+    messageElement.textContent = "Pulsa Jugar para iniciar combates.";
+    return false;
+  }
+  if (state.activeEncounter || state.walkAnim || state.combatLocked) {
+    if (!autoChain) messageElement.textContent = "No puedes forzar combate durante una accion activa.";
+    return false;
+  }
+  const nearest = getNearestPendingMilestone();
+  if (!nearest) {
+    if (!autoChain) messageElement.textContent = "No quedan enemigos en esta ruta.";
+    return false;
+  }
+  if (autoChain && !state.playerMovedSinceLastCombat) {
+    messageElement.textContent = "Avanza un poco antes de encadenar el siguiente combate.";
+    return false;
+  }
+  messageElement.textContent = customMessage || `Buscando combate: ${nearest.milestone.enemy}.`;
+  startEncounter(nearest.milestone);
+  return true;
+}
+
 function tryMoveMilestone(milestone, dx, dy) {
   if (dx === 0 && dy === 0) return false;
   const nextX = milestone.x + dx;
@@ -2691,10 +2986,11 @@ function tryMoveMilestone(milestone, dx, dy) {
 function updateEnemyAi(now) {
   if (state.gameScreen !== "playing") return;
   if (state.activeEncounter || state.walkAnim) return;
-  if (now - state.enemyAiLastStepAt < 760) return;
+  if (now - state.enemyAiLastStepAt < 640) return;
   state.enemyAiLastStepAt = now;
 
   const pending = state.route.milestones.filter((milestone) => !milestone.completed);
+  const activeChasers = pending.filter((milestone) => milestone.aiMode === "chase").length;
   pending.forEach((milestone) => {
     const dx = player.x - milestone.x;
     const dy = player.y - milestone.y;
@@ -2702,8 +2998,16 @@ function updateEnemyAi(now) {
     const absDy = Math.abs(dy);
     const distance = Math.hypot(dx, dy);
     const canSeePlayer = hasLineOfSight(milestone.x, milestone.y, player.x, player.y);
-    const shouldChase = distance <= 6.2 && canSeePlayer;
+    const threatBoostRange =
+      state.worldThreat.level === "critical" ? 2.2 : state.worldThreat.level === "high" ? 1.6 : 1.0;
+    const huntRange = Math.min(7.2, 5 + threatBoostRange);
+    const cooldown = milestone.lastChaseAt || 0;
+    const canRestartChase = now - cooldown >= 2200;
+    const shouldChase = distance <= huntRange && canSeePlayer && (milestone.aiMode === "chase" || (canRestartChase && activeChasers < 2));
     milestone.aiMode = shouldChase ? "chase" : "idle";
+    if (shouldChase && milestone.aiMode !== "chase") {
+      milestone.lastChaseAt = now;
+    }
 
     const stepX = dx === 0 ? 0 : dx > 0 ? 1 : -1;
     const stepY = dy === 0 ? 0 : dy > 0 ? 1 : -1;
@@ -2737,7 +3041,9 @@ function updateEnemyAi(now) {
 
 function updateStatus() {
   const completed = state.route.milestones.filter((milestone) => milestone.completed).length;
+  const worldStage = syncWorldStageProgression();
   const worldVisual = getWorldVisualPreset();
+  const worldBonus = getWorldStageBonus();
   const worldLabel =
     worldVisual.label === "purificado"
       ? "Purificado"
@@ -2754,6 +3060,9 @@ function updateStatus() {
         : state.worldThreat.level === "medium"
           ? "Media"
           : "Baja";
+  if (worldStageStatusElement) {
+    worldStageStatusElement.textContent = `Etapa: ${worldStage.index}/3 (${worldLabel}) | Bonus: +${worldBonus.atk} ATQ, +${worldBonus.def} DEF, +${worldBonus.hp} HP`;
+  }
   statusElement.textContent = `${state.route.label} | Hitos: ${completed}/${state.route.milestones.length} | Estado: ${worldLabel} | Nivel: ${player.level} | Items: ${getTotalItems()} | Esencia: ${state.summonEssence} | Amenaza: ${threatLabel}`;
   updateProgressPanel();
 }
@@ -2765,6 +3074,9 @@ function updateCombatStats() {
   const enemyPercent = (state.activeEncounter.hp / state.activeEncounter.milestone.hp) * 100;
   animateHpFill("player", Math.max(0, Math.min(100, playerPercent)));
   animateHpFill("enemy", Math.max(0, Math.min(100, enemyPercent)));
+  if (combatHpNumbersElement) {
+    combatHpNumbersElement.textContent = `Jugador ${player.hp}/${getMaxHp()} (${playerPercent.toFixed(0)}%) | Enemigo ${state.activeEncounter.hp}/${state.activeEncounter.milestone.hp} (${enemyPercent.toFixed(0)}%)`;
+  }
 }
 
 function animateHpFill(kind, targetPercent, immediate = false) {
@@ -2829,6 +3141,7 @@ async function endEncounterWithVictory() {
   await wait(360);
   milestone.completed = true;
   state.activeEncounter = null;
+  resetEnemyConfidence();
   state.combatLocked = false;
   setCombatTurn("player");
   setCombatControlsEnabled(true);
@@ -2843,6 +3156,13 @@ async function endEncounterWithVictory() {
   logCombatEvent(`Victoria sobre ${milestone.enemy}: +${earnedExp} EXP, +1 esencia.`);
   messageElement.textContent = `Hito superado: ${milestone.enemy}. +${earnedExp} EXP, loot: ${lootName}.`;
   updateStatus();
+  if (COMBAT_FOCUS_MODE && !player.won) {
+    window.setTimeout(() => {
+      if (seekCombat("Cadena de combate activada: siguiente enemigo.", { autoChain: true })) {
+        state.playerMovedSinceLastCombat = false;
+      }
+    }, AUTO_CHAIN_COMBAT_DELAY_MS);
+  }
 }
 
 async function enemyTurn() {
@@ -2858,11 +3178,13 @@ async function enemyTurn() {
   const playerRace = getPlayerRaceKey();
   const raceMult = getRaceDamageMultiplier(enemyRace, playerRace);
   const rawDamage = Math.round((Math.floor(Math.random() * 4) + 2) * raceMult);
-  const reducedDamage = Math.max(1, rawDamage - getPlayerDef());
+  const scaledDamage = Math.max(1, Math.round(rawDamage * ENEMY_DIFFICULTY.damage));
+  const reducedDamage = Math.max(1, scaledDamage - getPlayerDef());
   triggerEnemy3DLunge();
   playSfx("enemyHit");
   await playTemporaryClass(encounterPanel, "player-hit-anim", 300);
   player.hp = Math.max(0, player.hp - reducedDamage);
+  registerEnemyAttackConfidenceShift();
 
   if (player.hp <= 0) {
     battleLogElement.textContent = `Recibiste ${reducedDamage}. Has caido.`;
@@ -2898,6 +3220,7 @@ function startEncounter(milestone) {
     milestone,
     hp: milestone.hp,
   };
+  resetEnemyConfidence();
   state.combatLocked = false;
   state.pendingAttackPreview = null;
   playSfx("encounter");
@@ -2976,9 +3299,15 @@ function move(dx, dy) {
   if (state.gameScreen !== "playing") return;
   if (player.won || state.activeEncounter || state.walkAnim) return;
 
+  if (dx === 1) player.facing = "right";
+  if (dx === -1) player.facing = "left";
+  if (dy === 1) player.facing = "down";
+  if (dy === -1) player.facing = "up";
+
   const nextX = player.x + dx;
   const nextY = player.y + dy;
 
+  // Pokemon-like: if it's blocked, still allow the player to "face" the direction.
   if (!canMove(nextX, nextY)) return;
   playSfx("move");
 
@@ -2993,6 +3322,7 @@ function move(dx, dy) {
 
   player.x = nextX;
   player.y = nextY;
+  player.stepPhase = (player.stepPhase + 1) % 2;
   state.routeState[state.routeId] = { x: player.x, y: player.y, initialized: true };
 
   const milestone = getMilestoneAt(player.x, player.y);
@@ -3002,6 +3332,24 @@ function move(dx, dy) {
   }
 
   tryFinishMap();
+  state.playerMovedSinceLastCombat = true;
+}
+
+function getMoveFromInput() {
+  if (inputState.held.has("up")) return { dx: 0, dy: -1, dir: "up" };
+  if (inputState.held.has("down")) return { dx: 0, dy: 1, dir: "down" };
+  if (inputState.held.has("left")) return { dx: -1, dy: 0, dir: "left" };
+  if (inputState.held.has("right")) return { dx: 1, dy: 0, dir: "right" };
+  return null;
+}
+
+function normalizeMoveKey(key) {
+  const k = String(key || "").toLowerCase();
+  if (k === "arrowup" || k === "w") return "up";
+  if (k === "arrowdown" || k === "s") return "down";
+  if (k === "arrowleft" || k === "a") return "left";
+  if (k === "arrowright" || k === "d") return "right";
+  return null;
 }
 
 async function applyDamageToEnemy(damage, label, fixedAttackOutcome = null) {
@@ -3121,6 +3469,7 @@ async function attemptEscape() {
   if (escaped) {
     const enemy = state.activeEncounter.milestone.enemy;
     state.activeEncounter = null;
+    resetEnemyConfidence();
     setCombatModalOpen(false);
     state.routeState[state.routeId] = { x: player.x, y: player.y, initialized: true };
     messageElement.textContent = `Escapaste del combate contra ${enemy} sin cambiar de posicion.`;
@@ -3158,36 +3507,120 @@ function getWorldPhaseProgress() {
   return completed / total;
 }
 
+function getWorldStageByPhase(phase) {
+  if (phase < WORLD_STAGES[1].phase) return WORLD_STAGES[0];
+  if (phase < WORLD_STAGES[2].phase) return WORLD_STAGES[1];
+  return WORLD_STAGES[2];
+}
+
+function getCurrentWorldStage() {
+  return getWorldStageByPhase(getWorldPhaseProgress());
+}
+
+function getWorldStageBonus() {
+  return getCurrentWorldStage().bonus;
+}
+
+function getRouteStageTracker(routeId) {
+  if (!state.worldStageByRoute[routeId]) {
+    state.worldStageByRoute[routeId] = { lastStage: 1, rewardGrantedUpTo: 1 };
+  }
+  return state.worldStageByRoute[routeId];
+}
+
+function applyStageEntryRewards(targetStageIndex) {
+  const tracker = getRouteStageTracker(state.routeId);
+  let changed = false;
+  for (let stageIndex = tracker.rewardGrantedUpTo + 1; stageIndex <= targetStageIndex; stageIndex += 1) {
+    const stage = WORLD_STAGES[stageIndex - 1];
+    if (!stage) continue;
+    const reward = stage.entryReward || { heal: 0, essence: 0 };
+    if (reward.heal > 0) player.hp = Math.min(getMaxHp(), player.hp + reward.heal);
+    if (reward.essence > 0) state.summonEssence += reward.essence;
+    changed = true;
+    tracker.rewardGrantedUpTo = stageIndex;
+    if (state.gameScreen === "playing") {
+      messageElement.textContent = `Etapa ${stageIndex} alcanzada (${stage.label}): +${reward.heal} HP, +${reward.essence} esencia.`;
+      logCombatEvent(`Etapa ${stageIndex} (${stage.label}) desbloqueada: +${reward.heal} HP, +${reward.essence} esencia.`);
+    }
+  }
+  if (changed) {
+    updateStatsPanel();
+    updateCombatStats();
+    renderSummons();
+  }
+}
+
+function syncWorldStageProgression() {
+  const stage = getCurrentWorldStage();
+  const tracker = getRouteStageTracker(state.routeId);
+  if (stage.index > tracker.lastStage) {
+    applyStageEntryRewards(stage.index);
+  }
+  tracker.lastStage = stage.index;
+  return stage;
+}
+
 function getWorldVisualPreset() {
-  const phase = getWorldPhaseProgress();
-  if (phase < 0.34) {
+  const stage = getCurrentWorldStage();
+  if (stage.index === 1) {
     return {
-      phase,
+      phase: getWorldPhaseProgress(),
       label: "corrupto",
-      tint: "rgba(8, 14, 24, 0.34)",
-      fogAlpha: 0.83,
-      floorBoost: -14,
-      holyGlow: 0.02,
+      tint: "rgba(8, 14, 24, 0.42)",
+      fogAlpha: 0.9,
+      floorBoost: -22,
+      holyGlow: 0.01,
     };
   }
-  if (phase < 0.67) {
+  if (stage.index === 2) {
     return {
-      phase,
+      phase: getWorldPhaseProgress(),
       label: "fracturado",
-      tint: "rgba(12, 18, 28, 0.18)",
-      fogAlpha: 0.66,
-      floorBoost: 4,
-      holyGlow: 0.18,
+      tint: "rgba(12, 18, 28, 0.24)",
+      fogAlpha: 0.72,
+      floorBoost: 8,
+      holyGlow: 0.22,
     };
   }
   return {
-    phase,
+    phase: getWorldPhaseProgress(),
     label: "purificado",
-    tint: "rgba(20, 26, 38, 0.06)",
-    fogAlpha: 0.48,
-    floorBoost: 22,
-    holyGlow: 0.42,
+    tint: "rgba(20, 26, 38, 0.04)",
+    fogAlpha: 0.46,
+    floorBoost: 30,
+    holyGlow: 0.52,
   };
+}
+
+function getWorldStageIndexByPhase(phase) {
+  return getWorldStageByPhase(phase).index;
+}
+
+function applyDebugStageStep(direction) {
+  if (state.activeEncounter) {
+    messageElement.textContent = "No puedes avanzar etapas durante combate.";
+    return;
+  }
+  if (state.gameScreen !== "playing") {
+    messageElement.textContent = "Pulsa Jugar para habilitar etapas debug.";
+    return;
+  }
+  const phaseNow = getWorldPhaseProgress();
+  const currentStage = getWorldStageIndexByPhase(phaseNow);
+  const nextStage = Math.max(1, Math.min(3, currentStage + direction));
+  if (nextStage === currentStage) {
+    messageElement.textContent = `Ya estas en etapa ${currentStage}.`;
+    return;
+  }
+  const target = WORLD_STAGES[nextStage - 1];
+  state.debugWorldPhaseOverride = target.phase;
+  messageElement.textContent = `Debug etapa: ${currentStage} -> ${nextStage} (${target.label}).`;
+}
+
+function resetDebugStageOverride() {
+  state.debugWorldPhaseOverride = null;
+  messageElement.textContent = "Debug etapas desactivado (vuelve a progreso real).";
 }
 
 function getNearestPendingMilestoneDistance() {
@@ -3204,10 +3637,17 @@ function getWorldThreatLevel() {
     return { level: "low", distance: Infinity };
   }
   const distance = getNearestPendingMilestoneDistance();
+  const stage = getCurrentWorldStage().index;
+  const rangesByStage = {
+    1: { critical: 2.8, high: 4.8, medium: 7 },
+    2: { critical: 2.5, high: 4.3, medium: 6.4 },
+    3: { critical: 2.2, high: 3.8, medium: 5.6 },
+  };
+  const ranges = rangesByStage[stage] || rangesByStage[1];
   let level = "low";
-  if (distance <= 2.8) level = "critical";
-  else if (distance <= 4.8) level = "high";
-  else if (distance <= 7) level = "medium";
+  if (distance <= ranges.critical) level = "critical";
+  else if (distance <= ranges.high) level = "high";
+  else if (distance <= ranges.medium) level = "medium";
   return { level, distance };
 }
 
@@ -3222,8 +3662,10 @@ function maybePlayThreatPulse() {
   if (!state.audio.enabled || state.activeEncounter) return;
   if (state.gameScreen !== "playing") return;
   const now = performance.now();
+  const stage = getCurrentWorldStage().index;
+  const stagePulseFactor = stage === 3 ? 1.18 : stage === 2 ? 1.08 : 1;
   const intervals = { low: Infinity, medium: 1600, high: 980, critical: 560 };
-  const waitMs = intervals[state.worldThreat.level] || Infinity;
+  const waitMs = (intervals[state.worldThreat.level] || Infinity) * stagePulseFactor;
   if (!Number.isFinite(waitMs)) return;
   if (now - state.worldThreat.lastPulseAt < waitMs) return;
   state.worldThreat.lastPulseAt = now;
@@ -3593,16 +4035,45 @@ function drawPlayer() {
   const px = player.visualX + TILE / 2;
   const py = player.visualY + TILE / 2;
 
-  ctx.fillStyle = "#ef476f";
+  // Shadow for depth
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
   ctx.beginPath();
-  ctx.arc(px, py, TILE / 2.8, 0, Math.PI * 2);
+  ctx.ellipse(px, py + TILE * 0.18, TILE * 0.22, TILE * 0.12, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = "#fff";
-  ctx.beginPath();
-  ctx.arc(px - 5, py - 4, 3, 0, Math.PI * 2);
-  ctx.arc(px + 5, py - 4, 3, 0, Math.PI * 2);
-  ctx.fill();
+  if (playerSprite.complete && playerSprite.naturalWidth > 0) {
+    const size = TILE;
+    const bob = state.walkAnim ? Math.sin((performance.now() - state.walkAnim.startTime) / 60) * 1.2 : 0;
+    const step = state.walkAnim ? (player.stepPhase === 0 ? -0.6 : 0.6) : 0;
+    const drawX = Math.round(px - size / 2);
+    const drawY = Math.round(py - size / 2 + bob + step);
+
+    ctx.save();
+    const previousSmoothing = ctx.imageSmoothingEnabled;
+    ctx.imageSmoothingEnabled = false;
+
+    if (player.facing === "left") {
+      ctx.translate(drawX + size, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(playerSprite, 0, drawY, size, size);
+    } else {
+      ctx.drawImage(playerSprite, drawX, drawY, size, size);
+    }
+
+    ctx.imageSmoothingEnabled = previousSmoothing;
+    ctx.restore();
+  } else {
+    ctx.fillStyle = "#ef476f";
+    ctx.beginPath();
+    ctx.arc(px, py, TILE / 2.8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(px - 5, py - 4, 3, 0, Math.PI * 2);
+    ctx.arc(px + 5, py - 4, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 function getVisionRadius() {
@@ -3642,12 +4113,15 @@ function drawFogOfWar() {
       : state.worldThreat.level === "high" ? 0.16
         : state.worldThreat.level === "medium" ? 0.08
           : 0;
-  const softRadius = getVisionRadius() * TILE * (1 - threatPenalty);
+  const stage = getCurrentWorldStage().index;
+  const stageRelief = stage === 3 ? 0.06 : stage === 2 ? 0.03 : 0;
+  const adjustedPenalty = Math.max(0, threatPenalty - stageRelief);
+  const softRadius = getVisionRadius() * TILE * (1 - adjustedPenalty);
   const hardRadius = softRadius * 0.8;
   const visual = getWorldVisualPreset();
 
   ctx.save();
-  const fogAlpha = Math.max(0.34, visual.fogAlpha - 0.12);
+  const fogAlpha = Math.max(0.3, visual.fogAlpha);
   ctx.fillStyle = `rgba(3, 9, 16, ${fogAlpha})`;
   ctx.fillRect(0, 0, mapWidth, mapHeight);
   ctx.globalCompositeOperation = "destination-out";
@@ -3715,6 +4189,7 @@ function render() {
   updateWorldThreat();
   maybePlayThreatPulse();
   updateEnemyAi(now);
+  updateEnemyConfidence(now);
   applyFearCamera(now);
   const map = state.route.map;
   for (let y = 0; y < map.length; y += 1) {
@@ -3731,6 +4206,11 @@ function render() {
     player.visualX = state.walkAnim.startX + (state.walkAnim.targetX - state.walkAnim.startX) * eased;
     player.visualY = state.walkAnim.startY + (state.walkAnim.targetY - state.walkAnim.startY) * eased;
     if (t >= 1) state.walkAnim = null;
+  }
+
+  if (!state.walkAnim && !state.activeEncounter && state.gameScreen === "playing" && !player.won) {
+    const intent = getMoveFromInput();
+    if (intent) move(intent.dx, intent.dy);
   }
 
   drawFogOfWar();
@@ -3779,6 +4259,11 @@ inventoryOpenButton?.addEventListener("click", () => {
   setInventoryOverlayOpen(true);
 });
 
+seekCombatButton?.addEventListener("click", () => {
+  playSfx("ui");
+  seekCombat("Busqueda agresiva: entrando al combate mas cercano.");
+});
+
 inventoryCloseButton?.addEventListener("click", () => {
   playSfx("ui");
   setInventoryOverlayOpen(false);
@@ -3791,6 +4276,21 @@ inventoryOverlay?.addEventListener("click", (event) => {
 debugLevelOpenButton?.addEventListener("click", () => {
   playSfx("ui");
   setLevelSkipOverlayOpen(true);
+});
+
+debugStagePrevButton?.addEventListener("click", () => {
+  playSfx("ui");
+  applyDebugStageStep(-1);
+});
+
+debugStageNextButton?.addEventListener("click", () => {
+  playSfx("ui");
+  applyDebugStageStep(1);
+});
+
+debugStageResetButton?.addEventListener("click", () => {
+  playSfx("ui");
+  resetDebugStageOverride();
 });
 
 levelSkipCloseButton?.addEventListener("click", () => {
@@ -3956,8 +4456,7 @@ window.addEventListener("keydown", (event) => {
     return;
   }
   if (key === "0") {
-    state.debugWorldPhaseOverride = null;
-    messageElement.textContent = "Debug mundo 1 desactivado (vuelve a progreso real).";
+    resetDebugStageOverride();
     return;
   }
   if (key === "l") {
@@ -3983,12 +4482,24 @@ window.addEventListener("keydown", (event) => {
     }
   }
 
-  if (key === "arrowup" || key === "w") move(0, -1);
-  if (key === "arrowdown" || key === "s") move(0, 1);
-  if (key === "arrowleft" || key === "a") move(-1, 0);
-  if (key === "arrowright" || key === "d") move(1, 0);
+  const moveKey = normalizeMoveKey(event.key);
+  if (moveKey && !isTypingContext) {
+    inputState.held.add(moveKey);
+    inputState.lastDir = moveKey;
+    if (!event.repeat) {
+      const payload = getMoveFromInput();
+      if (payload) move(payload.dx, payload.dy);
+    }
+    return;
+  }
 
   if (key === "r") resetRun(`Reinicio manual en ${state.route.label}.`);
+});
+
+window.addEventListener("keyup", (event) => {
+  const moveKey = normalizeMoveKey(event.key);
+  if (!moveKey) return;
+  inputState.held.delete(moveKey);
 });
 
 window.addEventListener("pointerdown", () => {

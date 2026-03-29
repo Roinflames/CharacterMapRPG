@@ -191,6 +191,10 @@ body[data-theme="dark-brutal"][data-threat="critical"] .game-shell {
   min-height: 1.2rem;
 }
 
+#world-stage-status {
+  color: rgba(255, 238, 187, 0.95);
+}
+
 .version {
   margin-top: 0.5rem;
   color: var(--accent);
@@ -203,6 +207,18 @@ body[data-theme="dark-brutal"][data-threat="critical"] .game-shell {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.debug-level-controls {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.debug-level-controls .audio-toggle-btn {
+  flex: 1 1 120px;
 }
 
 .audio-toggle-btn {
@@ -717,12 +733,26 @@ body.game-focus-fullscreen .controls {
   background: linear-gradient(90deg, #ff7676, #eb3d57);
 }
 
+.hp-numbers {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 0.1em;
+}
+
 .turn-indicator {
   margin: 0.35rem 0 0;
   font-weight: 700;
   color: #ffe084;
   text-transform: uppercase;
   letter-spacing: 0.4px;
+}
+
+.enemy-confidence {
+  margin: 0.28rem 0 0;
+  font-weight: 700;
+  color: #ffb4a1;
+  letter-spacing: 0.2px;
 }
 
 .dice-roll {
@@ -1556,6 +1586,17 @@ button:active {
 
   .controls div button {
     flex: 1;
+  }
+
+  .debug-level-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .debug-level-controls .audio-toggle-btn {
+    width: 100%;
+    min-width: 0;
   }
 
   .inventory-book {

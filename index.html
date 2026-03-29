@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Character Map RPG | UI v0.35.4</title>
+    <title>Character Map RPG | UI v0.36.9</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -20,6 +20,7 @@
           </select>
         </div>
         <p id="milestones-status" class="status">Ruta 1 | Hitos: 0/4</p>
+        <p id="world-stage-status" class="status-message">Etapa: 1/3 (Corrupto) | Bonus: +0 ATQ, +0 DEF, +0 HP</p>
         <p id="milestone-message" class="status-message">Sigue la ruta y activa todos los hitos.</p>
         <div class="audio-controls" aria-label="Controles de audio">
           <button id="audio-toggle-btn" type="button" class="audio-toggle-btn">Audio: OFF</button>
@@ -30,8 +31,11 @@
         </div>
         <div class="debug-level-controls">
           <button id="debug-level-open-btn" type="button" class="audio-toggle-btn">Salto nivel</button>
+          <button id="debug-stage-prev-btn" type="button" class="audio-toggle-btn">Etapa -</button>
+          <button id="debug-stage-next-btn" type="button" class="audio-toggle-btn">Etapa +</button>
+          <button id="debug-stage-reset-btn" type="button" class="audio-toggle-btn">Etapa real</button>
         </div>
-        <p class="version">UI v0.35.4</p>
+        <p class="version">UI v0.36.9</p>
       </section>
 
       <section id="story-panel" class="inventory" aria-label="Historia principal">
@@ -56,6 +60,7 @@
           <section class="controls" aria-label="Controles tactiles">
             <button id="fullscreen-btn" type="button" class="fullscreen-btn">Pantalla completa</button>
             <button id="inventory-open-btn" type="button" class="fullscreen-btn">Inventario rapido</button>
+            <button id="seek-combat-btn" type="button" class="fullscreen-btn">Buscar combate</button>
             <button data-dir="up" aria-label="Mover arriba">▲</button>
             <div>
               <button data-dir="left" aria-label="Mover izquierda">◀</button>
@@ -165,22 +170,24 @@
           <span id="enemy-float-text" class="float-text hidden"></span>
         </div>
         <div class="combat-info">
-          <div class="hp-bars">
-            <div class="hp-row">
-              <span>Jugador</span>
-              <div class="hp-track">
-                <div id="player-hp-fill" class="hp-fill player"></div>
-              </div>
-            </div>
-            <div class="hp-row">
-              <span>Enemigo</span>
-              <div class="hp-track">
-                <div id="enemy-hp-fill" class="hp-fill enemy"></div>
-              </div>
+        <div class="hp-bars">
+          <div class="hp-row">
+            <span>Jugador</span>
+            <div class="hp-track">
+              <div id="player-hp-fill" class="hp-fill player"></div>
             </div>
           </div>
+          <div class="hp-row">
+            <span>Enemigo</span>
+            <div class="hp-track">
+              <div id="enemy-hp-fill" class="hp-fill enemy"></div>
+            </div>
+          </div>
+        </div>
+          <p id="combat-hp-numbers" class="hp-numbers">HP jugador: -- / Enemigo: --</p>
           <p id="combat-stats">HP jugador: 20 | HP enemigo: 0</p>
           <p id="turn-indicator" class="turn-indicator">Turno: Jugador</p>
+          <p id="enemy-confidence" class="enemy-confidence">Confianza enemiga: 0% | Castigo por inactividad: --</p>
           <p id="dice-roll" class="dice-roll">d20: --</p>
           <p id="attack-preview" class="attack-preview">Ataque previsto: --</p>
           <p class="inventory-help">Atajos: A Attack, I Item, R Run.</p>

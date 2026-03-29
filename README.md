@@ -1,4 +1,4 @@
-# Character Map (UI v0.35.4)
+# Character Map (UI v0.36.9)
 
 Proyecto frontend de personaje sobre mapa con colisiones, rutas, hitos RPG, inventario, experiencia/niveles y formación de equipo. Esta versión agrega el pipeline Unity para combate, retratos por asset pack y progresión con respawn de hitos.
 
@@ -35,6 +35,8 @@ Render Static Site:
 
 Tambien se puede desplegar como contenedor con el `Dockerfile` incluido.
 
+Guía paso a paso: `docs/RENDER.md`.
+
 ## Frente Unity (Battle Core)
 
 Se inicio la migracion de combate solido hacia Unity con soporte de canon externo:
@@ -50,6 +52,20 @@ Se inicio la migracion de combate solido hacia Unity con soporte de canon extern
 
 ## Historial de versiones
 
+- `v0.36.9`: protagonista ahora usa sprite 8-bit (caballerito) y movimiento tipo Pokemon (mantener tecla para avanzar; facing se conserva incluso si la casilla esta bloqueada).
+- `v0.36.0`: enfoque combat-centric: nuevo boton `Buscar combate` (entra directo al enemigo mas cercano), encadenado automatico de peleas tras cada victoria y AI enemiga en mapa mas agresiva (persecucion mas rapida y con mayor alcance). Incluye buff leve de vida base del jugador para pruebas (`24 -> 30 HP`).
+- `v0.36.1`: perfiles de confianza por enemigo: cada tipo (calmado/agresivo/erratico/balanceado) ajusta ganancia/decay/volatilidad para que la impaciencia sea distintiva sin romper el mecanismo global.
+- `v0.36.2`: fuerza el ataque solo después del timeout duro (`7s`), evitando que los enemigos se desaten en cadena; el `threshold` sigue siendo aviso, pero la ejecución requiere inactividad real.
+- `v0.36.3`: ajusto la IA para que solo persiga dentro de un rango moderado (5-7 pasos según amenaza) y reduzco la frecuencia del movimiento (640ms) para que no se acumulen todos sobre ti.
+- `v0.36.4`: limites de persecucion por enemigo: solo dos enemigos pueden perseguirte simultaneamente y cada uno necesita un cooldown de ~2.2s antes de volver a iniciar el chase; ayuda a mantener combates manejables sin reducir agresividad.
+- `v0.36.5`: la cadena automática requiere que el jugador se mueva entre combates; si no lo haces, no se activa y el botón “Buscar combate” queda como única forma de reactivar el siguiente duelo, evitando que te salten sin moverte.
+- `v0.36.6`: desactivo el modo “combat focus” automático (COMBAT_FOCUS_MODE=false) porque el mapa no estaba sincronizando la cadena: ahora solo el botón “Buscar combate” inicia peleas/resetea la IA mientras exploras.
+- `v0.36.7`: agrupo rutas en mundos con entrada compartida, indicando el mundo en el HUD y haciendo que cada mundo arranque siempre en el mismo punto (ej: rutas 1-3 inician en `1,1`); los warps lineales y los bosses están listos para usarse durante esa progresión.
+- `v0.36.8`: ajusté la dificultad global de enemigos (HP ×1.22 y daño ×1.18) para que los combates se sientan más aguerridos sin tocar el loop de combate; el balance se aplica automáticamente a rutas existentes y generadas.
+- `v0.35.8`: confianza enemiga con gradualidad por racha de ataques: cada ataque del enemigo sube una volatilidad (`Ritmo`) que acelera tanto la ganancia como la perdida de confianza; HUD de combate actualizado para mostrar ese ritmo junto al castigo por inactividad.
+- `v0.35.7`: IA de confianza enemiga en combate por inactividad del jugador: indicador visible en HUD (`Confianza enemiga` + countdown), crecimiento por contexto (amenaza/etapa/ventaja HP) y ataque automatico al llegar al umbral o timeout duro de inactividad.
+- `v0.35.6`: balance de etapas y progreso RPG: amenaza/niebla ahora escalan por etapa (transiciones mas claras), nuevo indicador visible `Etapa X/3` con bonus activo, bonus temporal por etapa en stats (+ATQ/DEF/HP) y recompensas de entrada por etapa (`HP + esencia`, una vez por run/ruta), con layout debug ajustado para mobile.
+- `v0.35.5`: controles debug visibles para etapas del mundo (`Etapa -`, `Etapa +`, `Etapa real`) con bloqueo en combate/lore y mensaje de transicion por etapa.
 - `v0.35.4`: modal debug extendido con `Salto ruta/mundo`: selector dinamico de rutas (1-13) + boton `Ir ruta`, con bloqueo en combate y transicion limpia desde lore a modo juego.
 - `v0.35.3`: hotfix adicional `Salto nivel`: ahora usa seteo exacto de nivel (subir y bajar) reconstruyendo stats desde base, con mensaje de confirmacion `nivel anterior -> nivel nuevo`.
 - `v0.35.2`: hotfix `Salto nivel`: ahora aplica subida por ajuste directo de nivel/atributos (sin depender de bucle de EXP), recarga HP al maximo y refresca stats/estado al instante.
